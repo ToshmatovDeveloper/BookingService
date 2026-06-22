@@ -2,7 +2,7 @@
 
 namespace BookingService.Domain.Entities;
 
-public class Hotel(Guid id, string name, string address, HotelStarRating rating, List<Guid> roomsId)
+public class Hotel(Guid id, string name, string address, string rating)
 {
     public Guid Id { get; set; } = id;
 
@@ -12,5 +12,5 @@ public class Hotel(Guid id, string name, string address, HotelStarRating rating,
 
     public IEnumerable<Room>? RoomIds { get; set; } 
 
-    public HotelStarRating StarRating { get; set; } = rating;
+    public string StarRating { get; set; } = rating;
 }

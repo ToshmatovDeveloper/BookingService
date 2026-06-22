@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="MediatR" Version="14.1.0" />
+      <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.3.11" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\BookingService.Application\BookingService.Application.csproj" />
+      <ProjectReference Include="..\BookingService.Domain\BookingService.Domain.csproj" />
+      <ProjectReference Include="..\BookingService.Infrastructure\BookingService.Infrastructure.csproj" />
+    </ItemGroup>
+
+</Project>

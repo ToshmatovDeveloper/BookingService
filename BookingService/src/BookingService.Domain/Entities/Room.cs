@@ -12,6 +12,8 @@ public class Room(Guid id, uint roomNumber, int floorNumber, Guid hotelId, RoomT
     
     public bool IsVacant { get; set; } = true;
 
+    public Hotel Hotel { get; set; } = null!;
+
     public Guid HotelId { get; set; } = hotelId;
 
     public RoomType RoomType { get; set; } = roomType;

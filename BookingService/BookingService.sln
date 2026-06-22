@@ -4,6 +4,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{C0A58475-01E
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BookingService.Domain", "src\BookingService.Domain\BookingService.Domain.csproj", "{5B1A17A9-0C8D-4984-9A3A-56BA985082BF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BookingService.Infrastructure", "src\BookingService.Infrastructure\BookingService.Infrastructure.csproj", "{44F2104A-16F0-4DC1-A27A-6142245099E3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -11,11 +13,16 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{5B1A17A9-0C8D-4984-9A3A-56BA985082BF} = {C0A58475-01EF-4C9B-9BD2-8519A94150AA}
+		{44F2104A-16F0-4DC1-A27A-6142245099E3} = {C0A58475-01EF-4C9B-9BD2-8519A94150AA}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{5B1A17A9-0C8D-4984-9A3A-56BA985082BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5B1A17A9-0C8D-4984-9A3A-56BA985082BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5B1A17A9-0C8D-4984-9A3A-56BA985082BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5B1A17A9-0C8D-4984-9A3A-56BA985082BF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{44F2104A-16F0-4DC1-A27A-6142245099E3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{44F2104A-16F0-4DC1-A27A-6142245099E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{44F2104A-16F0-4DC1-A27A-6142245099E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{44F2104A-16F0-4DC1-A27A-6142245099E3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

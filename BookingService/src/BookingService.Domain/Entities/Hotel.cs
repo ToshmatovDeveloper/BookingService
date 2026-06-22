@@ -10,7 +10,7 @@ public class Hotel(Guid id, string name, string address, HotelStarRating rating,
 
     public string Address { get; set; } = address;
 
-    public List<Guid> RoomsId { get; set; } = roomsId;
+    public IEnumerable<Room>? RoomIds { get; set; } 
 
     public HotelStarRating StarRating { get; set; } = rating;
 }

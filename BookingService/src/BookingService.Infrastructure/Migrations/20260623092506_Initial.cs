@@ -18,6 +18,7 @@ namespace BookingService.Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     Address = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    Floor = table.Column<int>(type: "integer", nullable: false),
                     StarRating = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>

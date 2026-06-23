@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BookingService.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260623065148_Initial")]
+    [Migration("20260623092506_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -66,6 +66,9 @@ namespace BookingService.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<int>("Floor")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Name")
                         .IsRequired()

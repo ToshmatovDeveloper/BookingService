@@ -34,9 +34,6 @@ namespace BookingService.Infrastructure.Migrations
                     b.Property<Guid>("HotelId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("RoomId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid?>("RoomId1")
                         .HasColumnType("uuid");
 
@@ -63,6 +60,9 @@ namespace BookingService.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<int>("Floor")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Name")
                         .IsRequired()

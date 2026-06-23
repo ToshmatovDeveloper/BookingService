@@ -72,7 +72,7 @@ public class BookingConfiguration : IEntityTypeConfiguration<Booking>
 {
     public void Configure(EntityTypeBuilder<Booking> builder)
     {
-        builder.ToTable("Rooms");
+        builder.ToTable("Bookings");
         
         builder.HasKey(x => x.Id);
         

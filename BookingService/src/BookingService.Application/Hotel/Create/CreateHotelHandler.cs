@@ -14,7 +14,7 @@ public class CreateHotelHandler(
         var dto = request.Dto;
 
         var hotel = new Domain.Entities.Hotel(
-            Guid.NewGuid(), dto.Name, dto.Address, dto.StarRating);
+            Guid.NewGuid(), dto.Name, dto.Address, dto.Floors, dto.StarRating);
         
         try
         {

@@ -33,6 +33,9 @@ public class HotelConfiguration : IEntityTypeConfiguration<Hotel>
         builder.Property(x => x.Address)
             .HasMaxLength(100)
             .IsRequired();
+
+        builder.Property(x => x.Floor)
+            .IsRequired();
         
         builder.HasMany(x => x.RoomIds)
             .WithOne(x => x.Hotel);

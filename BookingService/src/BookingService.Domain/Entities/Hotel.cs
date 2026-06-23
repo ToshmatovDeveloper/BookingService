@@ -1,16 +1,24 @@
-﻿using BookingService.Domain.Enum;
+﻿namespace BookingService.Domain.Entities;
 
-namespace BookingService.Domain.Entities;
-
-public class Hotel(Guid id, string name, string address, string rating)
+public class Hotel
 {
-    public Guid Id { get; set; } = id;
+    public Hotel() { }
+    
+    public Hotel(Guid id, string name, string address, string starRating)
+    {
+        Id = id;
+        Name = name;
+        Address = address;
+        StarRating = starRating;
+    }
+    
+    public Guid Id { get; init; }
 
-    public string Name { get; set; } = name;
+    public string Name { get; init; } 
 
-    public string Address { get; set; } = address;
+    public string Address { get; init; }
 
-    public IEnumerable<Room>? RoomIds { get; set; } 
+    public IEnumerable<Room>? RoomIds { get; init; } 
 
-    public string StarRating { get; set; } = rating;
+    public string StarRating { get; init; }
 }

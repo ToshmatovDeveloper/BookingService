@@ -9,11 +9,15 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.7"/>
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
+        <PackageReference Include="Scalar.AspNetCore" Version="2.16.4" />
+        <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="8.1.1" />
+        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="8.1.1" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\BookingService.Application\BookingService.Application.csproj" />
       <ProjectReference Include="..\BookingService.Infrastructure\BookingService.Infrastructure.csproj" />
+      <ProjectReference Include="..\BookingService.Presenters\BookingService.Presenters.csproj" />
     </ItemGroup>
 
 </Project>

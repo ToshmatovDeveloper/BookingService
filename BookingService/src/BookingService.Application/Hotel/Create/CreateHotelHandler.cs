@@ -20,7 +20,7 @@ public class CreateHotelHandler(
         {
             await dbContext.Hotels.AddAsync(hotel, cancellationToken);
 
-            logger.LogInformation("Hotel created successfully");
+            logger.LogInformation($"Hotel created successfully. Hotel id : {hotel.Id}");
         }
         catch (Exception ex)
         {

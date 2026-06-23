@@ -4,17 +4,21 @@ namespace BookingService.Domain.Entities;
 
 public class Room(Guid id, uint roomNumber, int floorNumber, Guid hotelId, RoomType roomType)
 {
-    public Guid Id { get; set; } = id;
-
-    public uint RoomNumber { get; set; } = roomNumber;
-
-    public int FloorNumber { get; set; } = floorNumber;
+    public Guid Id { get; init; } = id;
     
-    public bool IsVacant { get; set; } = true;
+    public Guid HotelId { get; init; } = hotelId;
 
-    public Hotel Hotel { get; set; } = null!;
+    public uint RoomNumber { get; init; } = roomNumber;
 
-    public Guid HotelId { get; set; } = hotelId;
+    public int FloorNumber { get; init; } = floorNumber;
+    
+    public bool IsVacant { get; init; } = true;
 
-    public RoomType RoomType { get; set; } = roomType;
+    public Hotel Hotel { get; init; } = null!;
+    
+    public Booking? Booking { get; init; }
+
+    public IEnumerable<Booking>? Bookings { get; init; } 
+    
+    public RoomType RoomType { get; init; } = roomType;
 }

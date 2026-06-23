@@ -79,6 +79,10 @@ public class BookingConfiguration : IEntityTypeConfiguration<Booking>
         builder.Property(x => x.HotelId)
             .IsRequired();
         
+        builder.HasOne(x => x.Room)
+            .WithOne(x => x.Booking)
+            .HasForeignKey<Room>(r => r.Id);
+        
         builder.Property(x => x.RoomId)
             .IsRequired();
         

@@ -10,7 +10,7 @@ public class Booking(Guid id, Guid hotelId, Guid roomId, DateTime startDate, Dat
 
     public Guid RoomId { get; set; } = roomId;
     
-    public Room Room { get; set; }
+    public Room? Room { get; set; }
 
     public DateTime StartDate { get; set; } = startDate;
 

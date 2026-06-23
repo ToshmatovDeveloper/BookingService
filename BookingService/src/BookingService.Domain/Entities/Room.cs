@@ -14,11 +14,11 @@ public class Room(Guid id, uint roomNumber, int floorNumber, Guid hotelId, RoomT
     
     public bool IsVacant { get; init; } = true;
 
+    public RoomType RoomType { get; init; } = roomType;
+    
     public Hotel Hotel { get; init; } = null!;
     
     public Booking? Booking { get; init; }
-
-    public IEnumerable<Booking>? Bookings { get; init; } 
     
-    public RoomType RoomType { get; init; } = roomType;
+    public IEnumerable<Booking>? Bookings { get; init; } 
 }

@@ -1,4 +1,7 @@
 ﻿using BookingService.Application.Hotel.Create;
+using BookingService.Application.Hotel.Get;
+using BookingService.Domain.DTOs;
+using CSharpFunctionalExtensions;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,8 +17,18 @@ public class HotelController(
         CreateHotelRequest request,
         CancellationToken cancellationToken)
     {
-        await mediator.Send(request, cancellationToken);
+        var result = await mediator.Send(request, cancellationToken);
     
-        return Ok();
+        return Ok(result);
     }
+    
+    [HttpGet("{hotelId:guid}")]
+        public async Task<IActionResult> GetHotelById(
+            [FromRoute] Guid hotelId,
+            CancellationToken cancellationToken)
+        {
+            Result<HotelDto,string> result = await mediator.Send(new GetHotelByIdRequest(hotelId), cancellationToken);
+            
+            return Ok(result.Value);
+        }
 }

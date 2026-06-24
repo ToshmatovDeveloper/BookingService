@@ -1,5 +1,6 @@
 using BookingService.Application.Hotel.Create;
 using BookingService.Infrastructure;
+using BookingService.Web.Middlewares;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args); 
@@ -10,6 +11,9 @@ builder.Services.AddOpenApi();
 builder.Services.AddControllers();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
+
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 builder.Services.AddMediatR(cfg =>
 {
@@ -24,6 +28,6 @@ if (app.Environment.IsDevelopment())
     
     app.UseSwaggerUI(options => { options.SwaggerEndpoint("/openapi/v1.json", "BookingService"); });
 }
-
+app.UseExceptionHandler();
 app.MapControllers();
 app.Run();

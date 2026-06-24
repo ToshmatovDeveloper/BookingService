@@ -1,4 +1,5 @@
 ﻿using BookingService.Application.Hotel.Create;
+using BookingService.Application.Hotel.Delete;
 using BookingService.Application.Hotel.Get;
 using BookingService.Domain.DTOs;
 using CSharpFunctionalExtensions;
@@ -23,12 +24,22 @@ public class HotelController(
     }
     
     [HttpGet("{hotelId:guid}")]
-        public async Task<IActionResult> GetHotelById(
-            [FromRoute] Guid hotelId,
-            CancellationToken cancellationToken)
-        {
-            Result<HotelDto,string> result = await mediator.Send(new GetHotelByIdRequest(hotelId), cancellationToken);
+    public async Task<IActionResult> GetHotelById(
+        [FromRoute] Guid hotelId,
+        CancellationToken cancellationToken)
+    {
+        Result<HotelDto,string> result = await mediator.Send(new GetHotelByIdRequest(hotelId), cancellationToken);
             
-            return Ok(result.Value);
-        }
+        return Ok(result.Value);
+    }
+    
+    [HttpDelete("{hotelId:guid}")]
+    public async Task<IActionResult> DeleteHotel(
+        [FromRoute] Guid hotelId,
+        CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new DeleteHotelRequest(hotelId), cancellationToken);
+            
+        return Ok(result);
+    }
 }

@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BookingService.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260623092506_Initial")]
+    [Migration("20260624054801_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -40,9 +40,6 @@ namespace BookingService.Infrastructure.Migrations
                     b.Property<Guid>("RoomId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("RoomId1")
-                        .HasColumnType("uuid");
-
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -51,7 +48,7 @@ namespace BookingService.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("RoomId1");
+                    b.HasIndex("RoomId");
 
                     b.ToTable("Bookings", (string)null);
                 });
@@ -87,6 +84,7 @@ namespace BookingService.Infrastructure.Migrations
             modelBuilder.Entity("BookingService.Domain.Entities.Room", b =>
                 {
                     b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<int>("FloorNumber")
@@ -113,9 +111,13 @@ namespace BookingService.Infrastructure.Migrations
 
             modelBuilder.Entity("BookingService.Domain.Entities.Booking", b =>
                 {
-                    b.HasOne("BookingService.Domain.Entities.Room", null)
+                    b.HasOne("BookingService.Domain.Entities.Room", "Room")
                         .WithMany("Bookings")
-                        .HasForeignKey("RoomId1");
+                        .HasForeignKey("RoomId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Room");
                 });
 
             modelBuilder.Entity("BookingService.Domain.Entities.Room", b =>
@@ -126,20 +128,7 @@ namespace BookingService.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("BookingService.Domain.Entities.Booking", "Booking")
-                        .WithOne("Room")
-                        .HasForeignKey("BookingService.Domain.Entities.Room", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Booking");
-
                     b.Navigation("Hotel");
-                });
-
-            modelBuilder.Entity("BookingService.Domain.Entities.Booking", b =>
-                {
-                    b.Navigation("Room");
                 });
 
             modelBuilder.Entity("BookingService.Domain.Entities.Hotel", b =>

@@ -40,8 +40,9 @@ namespace BookingService.Infrastructure.Migrations
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -96,8 +97,9 @@ namespace BookingService.Infrastructure.Migrations
                     b.Property<long>("RoomNumber")
                         .HasColumnType("bigint");
 
-                    b.Property<int>("RoomType")
-                        .HasColumnType("integer");
+                    b.Property<string>("RoomType")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 

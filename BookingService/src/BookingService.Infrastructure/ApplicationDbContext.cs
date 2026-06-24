@@ -41,6 +41,7 @@ public class HotelConfiguration : IEntityTypeConfiguration<Hotel>
             .WithOne(x => x.Hotel);
         
         builder.Property(x => x.StarRating)
+            .HasConversion<string>()
             .IsRequired();
     }
 }
@@ -67,6 +68,7 @@ public class RoomConfiguration : IEntityTypeConfiguration<Room>
             .HasForeignKey(x => x.HotelId);
         
         builder.Property(x => x.RoomType)
+            .HasConversion<string>()
             .IsRequired();
     }
 }
@@ -95,6 +97,7 @@ public class BookingConfiguration : IEntityTypeConfiguration<Booking>
             .IsRequired();
         
         builder.Property(x => x.Status)
+            .HasConversion<string>()
             .IsRequired();
     }
 }

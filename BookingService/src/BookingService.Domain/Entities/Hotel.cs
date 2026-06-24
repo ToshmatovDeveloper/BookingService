@@ -1,10 +1,12 @@
-﻿namespace BookingService.Domain.Entities;
+﻿using BookingService.Domain.Enum;
+
+namespace BookingService.Domain.Entities;
 
 public class Hotel
 {
     public Hotel() { }
     
-    public Hotel(Guid id, string name, string address, int floors, string starRating)
+    public Hotel(Guid id, string name, string address, int floors, HotelStarRating starRating)
     {
         Id = id;
         Name = name;
@@ -21,7 +23,7 @@ public class Hotel
 
     public int Floor { get; init; }
     
-    public string StarRating { get; init; }
+    public HotelStarRating StarRating { get; init; }
     
     public IEnumerable<Room>? RoomIds { get; init; } 
 }

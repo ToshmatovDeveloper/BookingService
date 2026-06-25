@@ -1,6 +1,7 @@
 ﻿using BookingService.Application.Room.Create;
 using BookingService.Application.Room.Delete;
 using BookingService.Application.Room.Get;
+using BookingService.Domain.DTOs;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,12 +24,14 @@ public class RoomController(
     
     [HttpGet("{roomId:guid}")]
     public async Task<IActionResult> GetRoomById(
-        [FromRoute] Guid hotelId,
+        [FromRoute] Guid roomId,
         CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(new GetRoomByIdRequest(hotelId), cancellationToken);
-            
-        return Ok(result.Value);
+        var result = await mediator.Send(new GetRoomByIdRequest(roomId), cancellationToken);
+
+        var room = new RoomDto(result.HotelId, result.RoomNumber, result.FloorNumber, result.RoomType);
+        
+        return Ok(room);
     }
     
     [HttpDelete("{roomId:guid}")]

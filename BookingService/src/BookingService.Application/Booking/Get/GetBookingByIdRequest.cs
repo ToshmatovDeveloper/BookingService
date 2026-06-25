@@ -4,4 +4,4 @@ using MediatR;
 
 namespace BookingService.Application.Booking.Get;
 
-public record GetBookingByIdRequest(Guid Id) : IRequest<Result<BookingDto, string>>;
+public record GetBookingByIdRequest(Guid Id) : IRequest<BookingDto>;

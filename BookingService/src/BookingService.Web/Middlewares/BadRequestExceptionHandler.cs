@@ -11,14 +11,17 @@ internal sealed class BadRequestExceptionHandler(ILogger<BadRequestExceptionHand
         Exception exception,
         CancellationToken cancellationToken)
     {
-        if (exception is not BadRequestException badRequestException)
+        var badRequestException = exception as BadRequestException 
+                                  ?? exception.InnerException as BadRequestException;
+
+        if (badRequestException is null)
         {
             return false;
         }
 
         logger.LogError(
             badRequestException,
-            "Exception occurred: {Message}",
+            "BadRequest exception occurred: {Message}",
             badRequestException.Message);
 
         var problemDetails = new ProblemDetails
@@ -29,9 +32,7 @@ internal sealed class BadRequestExceptionHandler(ILogger<BadRequestExceptionHand
         };
 
         httpContext.Response.StatusCode = problemDetails.Status.Value;
-
-        await httpContext.Response
-            .WriteAsJsonAsync(problemDetails, cancellationToken);
+        await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
 
         return true;
     }

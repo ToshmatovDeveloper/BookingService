@@ -28,9 +28,11 @@ public class HotelController(
         [FromRoute] Guid hotelId,
         CancellationToken cancellationToken)
     {
-        Result<HotelDto,string> result = await mediator.Send(new GetHotelByIdRequest(hotelId), cancellationToken);
-            
-        return Ok(result.Value);
+        var result = await mediator.Send(new GetHotelByIdRequest(hotelId), cancellationToken);
+           
+        var hotel = new HotelDto(result.Name, result.Address, result.Floors, result.StarRating);
+        
+        return Ok(hotel);
     }
     
     [HttpDelete("{hotelId:guid}")]

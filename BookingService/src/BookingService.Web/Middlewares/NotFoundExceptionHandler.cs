@@ -11,14 +11,17 @@ internal sealed class NotFoundExceptionHandler(ILogger<NotFoundExceptionHandler>
         Exception exception,
         CancellationToken cancellationToken)
     {
-        if (exception is not NotFoundException notFoundException)
+        var notFoundException = exception as NotFoundException 
+                                ?? exception.InnerException as NotFoundException;
+
+        if (notFoundException is null)
         {
-            return false;
+            return false; 
         }
 
         logger.LogError(
             notFoundException,
-            "Exception occurred: {Message}",
+            "NotFound exception occurred: {Message}",
             notFoundException.Message);
 
         var problemDetails = new ProblemDetails
@@ -29,9 +32,7 @@ internal sealed class NotFoundExceptionHandler(ILogger<NotFoundExceptionHandler>
         };
 
         httpContext.Response.StatusCode = problemDetails.Status.Value;
-
-        await httpContext.Response
-            .WriteAsJsonAsync(problemDetails, cancellationToken);
+        await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
 
         return true;
     }

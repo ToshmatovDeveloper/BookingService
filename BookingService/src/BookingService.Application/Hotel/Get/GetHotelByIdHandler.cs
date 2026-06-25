@@ -1,5 +1,6 @@
 ﻿using BookingService.Domain.DTOs;
 using BookingService.Infrastructure;
+using BookingService.Web.CustomExceptions;
 using CSharpFunctionalExtensions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -11,9 +12,9 @@ namespace BookingService.Application.Hotel.Get;
 public class GetHotelByIdHandler(
     ApplicationDbContext dbContext,
     IMemoryCache cache,
-    ILogger<GetHotelByIdHandler> logger) : IRequestHandler<GetHotelByIdRequest, Result<HotelDto, string>>
+    ILogger<GetHotelByIdHandler> logger) : IRequestHandler<GetHotelByIdRequest, HotelDto>
 {
-    public async Task<Result<HotelDto, string>> Handle(GetHotelByIdRequest request, CancellationToken cancellationToken)
+    public async Task<HotelDto> Handle(GetHotelByIdRequest request, CancellationToken cancellationToken)
     {
         logger.LogInformation($"Started reading hotel by id : {request.Id}");
 
@@ -27,7 +28,7 @@ public class GetHotelByIdHandler(
             {
                 logger.LogError($"Hotel with id : {request.Id} not found");
 
-                return "Hotel not found";
+                throw new NotFoundException("Hotel not found");
             }
         
             cache.Set(request.Id, 

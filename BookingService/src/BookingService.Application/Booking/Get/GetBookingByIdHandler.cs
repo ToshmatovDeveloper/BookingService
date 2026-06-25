@@ -1,5 +1,6 @@
 ﻿using BookingService.Domain.DTOs;
 using BookingService.Infrastructure;
+using BookingService.Web.CustomExceptions;
 using CSharpFunctionalExtensions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -12,9 +13,9 @@ public class GetBookingByIdHandler(
     IMemoryCache cache,
     ApplicationDbContext dbContext,
     ILogger<GetBookingByIdHandler> logger) 
-    : IRequestHandler<GetBookingByIdRequest, Result<BookingDto, string>>
+    : IRequestHandler<GetBookingByIdRequest, BookingDto>
 {
-    public async Task<Result<BookingDto, string>> Handle(
+    public async Task<BookingDto> Handle(
         GetBookingByIdRequest request,
         CancellationToken cancellationToken)
     {
@@ -29,7 +30,7 @@ public class GetBookingByIdHandler(
             if (booking == null)
             {
                 logger.LogError($"Booking with id : {request.Id} not found.");
-                return "Booking not found.";
+                throw new NotFoundException("Booking not found");
             }
 
             logger.LogInformation($"Booking with id : {request.Id} found from db.");

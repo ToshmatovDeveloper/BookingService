@@ -1,6 +1,7 @@
 ﻿using BookingService.Application.Booking.Cancel;
 using BookingService.Application.Booking.Create;
 using BookingService.Application.Booking.Get;
+using BookingService.Domain.DTOs;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -27,8 +28,10 @@ public class BookingController(
         CancellationToken cancellationToken)
     {
         var result = await mediator.Send(new GetBookingByIdRequest(bookingId), cancellationToken);
-            
-        return Ok(result.Value);
+           
+        var booking = new BookingDto(result.HotelId, result.RoomId, result.StartDate, result.EndDate);
+        
+        return Ok(booking);
     }
     
     [HttpPatch("{bookingId:guid}/cancel")]

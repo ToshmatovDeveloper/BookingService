@@ -20,6 +20,8 @@ builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(CreateHotelRequest).Assembly);
 });
 
+builder.Services.AddMemoryCache();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

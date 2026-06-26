@@ -20,11 +20,11 @@ public class GetHotelByIdHandler(
 
         if (!cache.TryGetValue(request.Id, out Domain.Entities.Hotel? hotel))
         {
-            var result = await dbContext.Hotels
+            hotel = await dbContext.Hotels
                 .Where(x => x.Id == request.Id)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            if (result == null)
+            if (hotel == null)
             {
                 logger.LogError($"Hotel with id : {request.Id} not found");
 

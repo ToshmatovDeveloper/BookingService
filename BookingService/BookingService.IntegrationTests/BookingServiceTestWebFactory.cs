@@ -11,7 +11,7 @@ using Testcontainers.PostgreSql;
 
 namespace BookingService.IntegrationTests;
 
-public class BookingTestWebFactory : WebApplicationFactory<Program>, IAsyncLifetime
+public class BookingServiceTestWebFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
     private readonly PostgreSqlContainer _container = new PostgreSqlBuilder("postgres:16") 
         .WithDatabase("booking_service_db")

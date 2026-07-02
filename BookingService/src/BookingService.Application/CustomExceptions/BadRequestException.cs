@@ -1,3 +1,3 @@
-﻿namespace BookingService.Web.CustomExceptions;
+﻿namespace BookingService.Application.CustomExceptions;
 
-public class BadRequestException(string message) : Exception(message);
+public class BadRequestException(string? message) : Exception(message);

@@ -1,8 +1,11 @@
-﻿using BookingService.Infrastructure;
+﻿using BookingService.Domain.DTOs;
+using BookingService.Infrastructure;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
 namespace BookingService.Application.Room.Create;
+
+public record CreateRoomRequest(RoomDto Dto) : IRequest<Guid>;
 
 public class CreateRoomHandler(
     ApplicationDbContext dbContext,

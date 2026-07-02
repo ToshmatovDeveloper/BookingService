@@ -6,6 +6,8 @@ using Microsoft.Extensions.Logging;
 
 namespace BookingService.Application.Room.Delete;
 
+public record DeleteRoomRequest(Guid Id) : IRequest<bool>;
+
 public class DeleteRoomHandler(
     ApplicationDbContext dbContext, 
     ILogger<DeleteRoomHandler> logger) : IRequestHandler<DeleteRoomRequest, bool>

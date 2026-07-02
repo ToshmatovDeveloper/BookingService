@@ -6,6 +6,8 @@ using Microsoft.Extensions.Logging;
 
 namespace BookingService.Application.Hotel.Delete;
 
+public record DeleteHotelRequest(Guid Id) : IRequest<bool>;
+
 public class DeleteHotelHandler(
     ApplicationDbContext dbContext, 
     ILogger<DeleteHotelHandler> logger) : IRequestHandler<DeleteHotelRequest, bool>

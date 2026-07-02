@@ -1,13 +1,14 @@
-﻿using BookingService.Domain.DTOs;
+﻿using BookingService.Application.CustomExceptions;
+using BookingService.Domain.DTOs;
 using BookingService.Infrastructure;
-using BookingService.Web.CustomExceptions;
-using CSharpFunctionalExtensions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
 namespace BookingService.Application.Booking.Get;
+
+public record GetBookingByIdRequest(Guid Id) : IRequest<BookingDto>;
 
 public class GetBookingByIdHandler(
     IMemoryCache cache,
@@ -36,9 +37,8 @@ public class GetBookingByIdHandler(
             logger.LogInformation($"Booking with id : {request.Id} found from db.");
 
             cache.Set(
-                request.Id, 
-                booking, 
-                new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
+                request.Id,
+                booking, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
         }
         else
         {
@@ -46,7 +46,7 @@ public class GetBookingByIdHandler(
         }
     
         return new BookingDto(
-            booking.HotelId,
+            booking!.HotelId,
             booking.RoomId,
             booking.StartDate,
             booking.EndDate);

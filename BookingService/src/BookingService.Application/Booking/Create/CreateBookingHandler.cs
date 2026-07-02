@@ -1,10 +1,13 @@
-﻿using BookingService.Domain.Enum;
+﻿using BookingService.Domain.DTOs;
+using BookingService.Domain.Enum;
 using BookingService.Infrastructure;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace BookingService.Application.Booking.Create;
+
+public record CreateBookingRequest(BookingDto BookingDto) : IRequest<Guid>;
 
 public class CreateBookingHandler(
     ApplicationDbContext dbContext,

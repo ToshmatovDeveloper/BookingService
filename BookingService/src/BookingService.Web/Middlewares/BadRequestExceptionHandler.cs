@@ -1,4 +1,4 @@
-﻿using BookingService.Web.CustomExceptions;
+﻿using BookingService.Application.CustomExceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 

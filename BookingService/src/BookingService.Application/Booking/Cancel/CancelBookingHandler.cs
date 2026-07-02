@@ -7,6 +7,8 @@ using Microsoft.Extensions.Logging;
 
 namespace BookingService.Application.Booking.Cancel;
 
+public record CancelBookingRequest(Guid Id) : IRequest<Result<bool, string>>;
+
 public class CancelBookingHandler(
     ApplicationDbContext dbContext,
     ILogger<CancelBookingHandler> logger) : IRequestHandler<CancelBookingRequest, Result<bool, string>>

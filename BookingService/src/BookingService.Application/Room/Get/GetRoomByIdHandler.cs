@@ -1,12 +1,14 @@
-﻿using BookingService.Domain.DTOs;
+﻿using BookingService.Application.CustomExceptions;
+using BookingService.Domain.DTOs;
 using BookingService.Infrastructure;
-using BookingService.Web.CustomExceptions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
 namespace BookingService.Application.Room.Get;
+
+public record GetRoomByIdRequest(Guid Id) : IRequest<RoomDto>;
 
 public class GetRoomByIdHandler(
     ApplicationDbContext dbContext,
@@ -30,7 +32,8 @@ public class GetRoomByIdHandler(
                 throw new NotFoundException("Room not found"); 
             }
         
-            cache.Set(request.Id, room, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
+            cache.Set(request.Id, room,
+                new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
             
             logger.LogInformation($"Room with id : {request.Id} found in db");
         }

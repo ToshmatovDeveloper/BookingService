@@ -1,10 +1,11 @@
 using BookingService.Application.Hotel.Create;
+using BookingService.Application.Settings.Cache;
 using BookingService.Application.Validation;
-using BookingService.Application.Validation.Hotel;
 using BookingService.Infrastructure;
 using BookingService.Web.Middlewares;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args); 
 
@@ -23,6 +24,9 @@ builder.Services.AddExceptionHandler<NotFoundExceptionHandler>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>(); 
 
 builder.Services.AddProblemDetails();
+
+builder.Services.Configure<CacheSettings>(
+    builder.Configuration.GetSection("CacheSettings"));
 
 builder.Services.AddMediatR(cfg =>
 {

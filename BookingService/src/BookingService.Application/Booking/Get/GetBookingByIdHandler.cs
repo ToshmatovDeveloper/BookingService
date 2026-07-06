@@ -1,10 +1,12 @@
 ﻿using BookingService.Application.CustomExceptions;
+using BookingService.Application.Settings.Cache;
 using BookingService.Domain.DTOs;
 using BookingService.Infrastructure;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace BookingService.Application.Booking.Get;
 
@@ -12,6 +14,7 @@ public record GetBookingByIdRequest(Guid Id) : IRequest<BookingDto>;
 
 public class GetBookingByIdHandler(
     IMemoryCache cache,
+    IOptionsMonitor<CacheSettings> options,
     ApplicationDbContext dbContext,
     ILogger<GetBookingByIdHandler> logger) 
     : IRequestHandler<GetBookingByIdRequest, BookingDto>
@@ -38,7 +41,7 @@ public class GetBookingByIdHandler(
 
             cache.Set(
                 request.Id,
-                booking, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
+                booking, options.CurrentValue.TimeToLive);
         }
         else
         {

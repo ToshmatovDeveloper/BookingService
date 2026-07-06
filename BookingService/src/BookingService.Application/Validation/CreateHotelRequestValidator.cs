@@ -1,7 +1,7 @@
 ﻿using BookingService.Application.Hotel.Create;
 using FluentValidation;
 
-namespace BookingService.Application.Validation.Hotel;
+namespace BookingService.Application.Validation;
 
 public class CreateHotelRequestValidator : AbstractValidator<CreateHotelRequest>
 {

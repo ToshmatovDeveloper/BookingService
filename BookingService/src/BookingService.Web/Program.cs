@@ -5,7 +5,6 @@ using BookingService.Infrastructure;
 using BookingService.Web.Middlewares;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args); 
 

@@ -1,3 +1,4 @@
+using AuthService.Application.Settings;
 using AuthService.Domain.Entities;
 using AuthService.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -15,22 +16,16 @@ builder.Services.AddDbContext<AuthDbContext>(options =>
     options.UseSnakeCaseNamingConvention();  
 });
 
+builder.Services.Configure<PasswordSettings>(
+    builder.Configuration.GetSection("PasswordSettings"));
 
-builder.Services.AddIdentity<Account, Role>(options =>
-    {
-        options.Password.RequiredLength = 8;
-        options.Password.RequireDigit = true;
-        options.Password.RequireUppercase = true;
-        options.Password.RequireLowercase = true;
-        options.Password.RequireNonAlphanumeric = false;
-        
-        options.Lockout.MaxFailedAccessAttempts = 5;
-        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
-        
-        options.User.RequireUniqueEmail = true;
-        
-        options.SignIn.RequireConfirmedEmail = false;
-    })
+builder.Services.Configure<LockoutSettings>(
+    builder.Configuration.GetSection("LockoutSettings"));
+
+builder.Services.Configure<UserSettings>(
+    builder.Configuration.GetSection("UserSettings"));
+
+builder.Services.AddIdentity<Account, Role>()
     .AddEntityFrameworkStores<AuthDbContext>();
 
 var app = builder.Build();

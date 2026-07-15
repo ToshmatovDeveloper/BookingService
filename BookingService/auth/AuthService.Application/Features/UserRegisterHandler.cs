@@ -1,4 +1,5 @@
-﻿using AuthService.Domain.Entities;
+﻿using AuthService.Application.CustomException;
+using AuthService.Domain.Entities;
 using AuthService.Infrastructure;
 using FluentValidation;
 using MediatR;
@@ -27,18 +28,26 @@ public class UserRegisterHandler(
 
         if (!validationResult.IsValid)
         {
-            logger.LogWarning("User registration request is invalid.");
+            logger.LogWarning("User password is invalid.");
             return false;
         }
 
         var user = new Account(request.Email, request.UserName);
+        
+        var userNameIsNotValid = await dbContext.Accounts.AnyAsync(x => x.UserName == request.UserName, cancellationToken);
+
+        if (userNameIsNotValid)
+        {
+            logger.LogWarning("Username is already in use.");
+            throw new UserNameIsAlreadyInUseException("Username is already in use.");
+        }
         
         var emailIsNotValid = await dbContext.Accounts.AnyAsync(x => x.Email == request.Email, cancellationToken);
 
         if (emailIsNotValid)
         {
             logger.LogWarning("Email is already in use.");
-            return false;
+            throw new EmailIsAlreadyInUseException("Email is already in use.");
         }
         
         var result = await userManager.CreateAsync(user, request.Password);
@@ -46,7 +55,7 @@ public class UserRegisterHandler(
         if (!result.Succeeded)
         {
             logger.LogError("Failed to create user.");
-            return false;
+            throw new UserCreateFailedException("Failed to create user.");
         }
         
         var role = new Role("User");
@@ -61,7 +70,7 @@ public class UserRegisterHandler(
         if (!roleAddResult.Succeeded)
         {
             logger.LogError("Failed to add role to user.");
-            return false;
+            throw new FailedAddUserRoleException("Failed to add role to user.");
         }
         
         logger.LogInformation("User successfully registered.");

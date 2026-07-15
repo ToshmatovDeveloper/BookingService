@@ -4,6 +4,7 @@ using AuthService.Application.Validation;
 using AuthService.Domain.Entities;
 using AuthService.Infrastructure;
 using AuthService.Presenters.Controllers;
+using AuthService.Web;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
@@ -25,7 +26,11 @@ builder.Services.AddDbContext<AuthDbContext>(options =>
 });
 
 builder.Services.AddValidatorsFromAssembly(
-    typeof(RegisterUserRequestValidator).Assembly);
+    typeof(PasswordValidator).Assembly);
+
+builder.Services.AddMyCustomMiddlewares();
+
+builder.Services.AddProblemDetails();
 
 builder.Services.Configure<PasswordSettings>(
     builder.Configuration.GetSection("PasswordSettings"));
@@ -54,6 +59,8 @@ if (app.Environment.IsDevelopment())
     
     app.MapScalarApiReference();
 }
+
+app.UseExceptionHandler();
 
 app.UseHttpsRedirection();
 

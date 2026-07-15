@@ -5,15 +5,13 @@ using Microsoft.Extensions.Options;
 
 namespace AuthService.Application.Validation;
 
-public class RegisterUserRequestValidator 
+public class PasswordValidator 
     : AbstractValidator<UserRegisterRequest>
 {
-    public RegisterUserRequestValidator(
-        IOptionsMonitor<PasswordSettings> passwordOptions, 
-        IOptionsMonitor<UserSettings> userOptions)
+    public PasswordValidator(
+        IOptionsMonitor<PasswordSettings> passwordOptions)
     {
         var passwordSettings = passwordOptions.CurrentValue;
-        var userSettings = userOptions.CurrentValue;
 
         RuleFor(request => request.Password)
             .NotEmpty()
@@ -25,35 +23,32 @@ public class RegisterUserRequestValidator
         {
             RuleFor(x => x.Password)
                 .Matches("[A-Z]")
-                .WithMessage("Password must contain at least one uppercase letter.");
+                .WithMessage(
+                    "Password must contain at least one uppercase letter.");
         }
 
         if (passwordSettings.RequireLowercase)
         {
             RuleFor(x => x.Password)
                 .Matches("[a-z]")
-                .WithMessage("Password must contain at least one lowercase letter.");
+                .WithMessage(
+                    "Password must contain at least one lowercase letter.");
         }
 
         if (passwordSettings.RequireDigit)
         {
             RuleFor(x => x.Password)
                 .Matches("[0-9]")
-                .WithMessage("Password must contain at least one digit.");
+                .WithMessage(
+                    "Password must contain at least one digit.");
         }
 
         if (passwordSettings.RequireNonAlphanumeric)
         {
             RuleFor(x => x.Password)
                 .Matches("[^a-zA-Z0-9]")
-                .WithMessage("Password must contain at least one non-alphanumeric character.");
-        }
-
-        if (userSettings.RequireUniqueEmail)
-        {
-            RuleFor(x => x.Email)
-                .NotEqual(x => x.Password)
-                .WithMessage("Email and password cannot be the same.");
+                .WithMessage(
+                    "Password must contain at least one non-alphanumeric character.");
         }
     }
 }

@@ -7,6 +7,8 @@ namespace AuthService.Infrastructure;
 public class AuthDbContext(DbContextOptions<AuthDbContext> options) 
     : IdentityDbContext<Account, Role, Guid>(options)
 {
+    public DbSet<Account> Accounts { get; set; }
+    
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

@@ -2,6 +2,8 @@
 
 public class PasswordSettings
 {
+    public const string SectionName = "PasswordSettings";
+    
     public int RequiredLength { get; set; }
     public bool RequireDigit { get; set; }
     public bool RequireUppercase { get; set; }

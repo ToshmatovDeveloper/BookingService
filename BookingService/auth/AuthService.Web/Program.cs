@@ -17,7 +17,7 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddControllers();
 builder.Services.AddControllers()
-    .AddApplicationPart(typeof(UserRegisterController).Assembly);
+    .AddApplicationPart(typeof(UserController).Assembly);
 
 builder.Services.AddDbContext<AuthDbContext>(options =>
 {
@@ -40,6 +40,9 @@ builder.Services.Configure<LockoutSettings>(
 
 builder.Services.Configure<UserSettings>(
     builder.Configuration.GetSection("UserSettings"));
+
+builder.Services.Configure<JwtSettings>(
+    builder.Configuration.GetSection("JwtSettings"));
 
 builder.Services.AddIdentity<Account, Role>()
     .AddEntityFrameworkStores<AuthDbContext>();

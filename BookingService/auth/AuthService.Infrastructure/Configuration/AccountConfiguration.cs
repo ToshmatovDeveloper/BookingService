@@ -18,8 +18,8 @@ internal sealed class AccountConfiguration : IEntityTypeConfiguration<Account>
             .HasMaxLength(AccountConstants.MaxEmailLength)
             .IsRequired();
 
-        builder.Property(a => a.CreatedAt)
-            .ValueGeneratedOnAdd();
+        builder.Property(e => e.UpdatedAt)
+            .HasDefaultValueSql("NOW()");
          
         builder.Property(a => a.UpdatedAt)
             .ValueGeneratedOnAddOrUpdate();

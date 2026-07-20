@@ -2,6 +2,7 @@
 using BookingService.Application.Features.Queries.Room;
 using BookingService.Domain.DTOs;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BookingService.Presenters.Controllers;
@@ -11,6 +12,7 @@ namespace BookingService.Presenters.Controllers;
 public class RoomController(
     IMediator mediator): ControllerBase
 {
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<IActionResult> CreateRoom(
         CreateRoomCommand command,
@@ -33,6 +35,7 @@ public class RoomController(
         return Ok(room);
     }
     
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{roomId:guid}")]
     public async Task<IActionResult> DeleteRoom(
         [FromRoute] Guid roomId,

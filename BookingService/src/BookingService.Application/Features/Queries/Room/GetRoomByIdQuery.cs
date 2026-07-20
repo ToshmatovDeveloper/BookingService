@@ -8,40 +8,40 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace BookingService.Application.Room.Get;
+namespace BookingService.Application.Features.Queries.Room;
 
-public record GetRoomByIdRequest(Guid Id) : IRequest<RoomDto>;
+public record GetRoomByIdQuery(Guid Id) : IRequest<RoomDto>;
 
-public class GetRoomByIdHandler(
+public class GetRoomByIdQueryHandler(
     ApplicationDbContext dbContext,
     IOptionsMonitor<CacheSettings> options,
     IMemoryCache cache,
-    ILogger<GetRoomByIdHandler> logger) : IRequestHandler<GetRoomByIdRequest, RoomDto>
+    ILogger<GetRoomByIdQueryHandler> logger) : IRequestHandler<GetRoomByIdQuery, RoomDto>
 {
-    public async Task<RoomDto> Handle(GetRoomByIdRequest request, CancellationToken cancellationToken)
+    public async Task<RoomDto> Handle(GetRoomByIdQuery query, CancellationToken cancellationToken)
     {
-        logger.LogInformation($"Started reading room by id : {request.Id}");
+        logger.LogInformation($"Started reading room by id : {query.Id}");
 
-        if (!cache.TryGetValue(request.Id, out Domain.Entities.Room? room))
+        if (!cache.TryGetValue(query.Id, out Domain.Entities.Room? room))
         {
             room = await dbContext.Rooms
-                .Where(x => x.Id == request.Id)
+                .Where(x => x.Id == query.Id)
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (room == null)
             {
-                logger.LogError($"Room with id : {request.Id} not found");
+                logger.LogError($"Room with id : {query.Id} not found");
                 
                 throw new NotFoundException("Room not found"); 
             }
         
-            cache.Set(request.Id, room, options.CurrentValue.TimeToLive);
+            cache.Set(query.Id, room, options.CurrentValue.TimeToLive);
             
-            logger.LogInformation($"Room with id : {request.Id} found in db");
+            logger.LogInformation($"Room with id : {query.Id} found in db");
         }
         else
         {
-            logger.LogInformation($"Room with id : {request.Id} found in cache");
+            logger.LogInformation($"Room with id : {query.Id} found in cache");
         }
         
         return new RoomDto(room.HotelId, room.RoomNumber, room.FloorNumber, room.RoomType);

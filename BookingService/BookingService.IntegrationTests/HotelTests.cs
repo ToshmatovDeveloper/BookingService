@@ -1,6 +1,5 @@
-﻿using BookingService.Application.Hotel.Create;
-using BookingService.Application.Hotel.Delete;
-using BookingService.Application.Hotel.Get;
+﻿using BookingService.Application.Features.Commands.Hotel;
+using BookingService.Application.Features.Queries.Hotel;
 using BookingService.Domain.DTOs;
 using BookingService.Domain.Entities;
 using BookingService.Domain.Enum;
@@ -28,11 +27,14 @@ public class HotelTests(BookingServiceTestWebFactory factory)
         
         //act
         
-        var result = await mediator.Send(new CreateHotelRequest(hotelDto), cancellationToken);
+        var result = await mediator.Send(new CreateHotelCommand(hotelDto), cancellationToken);
 
         //Assert
 
-        Assert.NotEqual(Guid.Empty, result);
+        Assert.Equal(hotelDto.Name, result.Name);
+        Assert.Equal(hotelDto.Address, result.Address);
+        Assert.Equal(hotelDto.Floors, result.Floors);
+        Assert.Equal(hotelDto.StarRating, result.StarRating);
     }
     
     [Fact]
@@ -43,10 +45,8 @@ public class HotelTests(BookingServiceTestWebFactory factory)
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var mediator = scope.ServiceProvider.GetRequiredService<ISender>();
         var cancellationToken = CancellationToken.None;
-
-        var hotelId = Guid.NewGuid();
         
-        var hotel = new Hotel(hotelId, "Hotel A", "Qatar", 12, HotelStarRating.FiveStar);
+        var hotel = new Hotel("Hotel A", "Qatar", 12, HotelStarRating.FiveStar);
         
         dbContext.Hotels.Add(hotel);
         
@@ -54,7 +54,7 @@ public class HotelTests(BookingServiceTestWebFactory factory)
         
         //act
         
-        var result = await mediator.Send(new GetHotelByIdRequest(hotelId), cancellationToken);
+        var result = await mediator.Send(new GetHotelByIdQuery(hotel.Id), cancellationToken);
 
         //Assert
 
@@ -73,7 +73,7 @@ public class HotelTests(BookingServiceTestWebFactory factory)
 
         var hotelId = Guid.NewGuid();
         
-        var hotel = new Hotel(hotelId, "Hotel A", "Qatar", 12, HotelStarRating.FiveStar);
+        var hotel = new Hotel("Hotel A", "Qatar", 12, HotelStarRating.FiveStar);
         
         dbContext.Hotels.Add(hotel);
         
@@ -83,7 +83,7 @@ public class HotelTests(BookingServiceTestWebFactory factory)
         
         //act
         
-        var result = await mediator.Send(new DeleteHotelRequest(Guid.NewGuid()), cancellationToken);
+        var result = await mediator.Send(new DeleteHotelCommand(Guid.NewGuid()), cancellationToken);
         
         //Assert
 

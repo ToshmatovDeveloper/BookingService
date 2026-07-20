@@ -1,6 +1,5 @@
-﻿using BookingService.Application.Booking.Cancel;
-using BookingService.Application.Booking.Create;
-using BookingService.Application.Booking.Get;
+﻿using BookingService.Application.Features.Commands.Booking;
+using BookingService.Application.Features.Queries.Booking;
 using BookingService.Domain.DTOs;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -14,10 +13,10 @@ public class BookingController(
 {
     [HttpPost]
     public async Task<IActionResult> CreateBooking(
-        CreateBookingRequest request,
+        CreateBookingCommand command,
         CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(request, cancellationToken);
+        var result = await mediator.Send(command, cancellationToken);
     
         return Ok(result);
     }
@@ -27,7 +26,7 @@ public class BookingController(
         [FromRoute] Guid bookingId,
         CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(new GetBookingByIdRequest(bookingId), cancellationToken);
+        var result = await mediator.Send(new GetBookingByIdQuery(bookingId), cancellationToken);
            
         var booking = new BookingDto(result.HotelId, result.RoomId, result.StartDate, result.EndDate);
         
@@ -39,14 +38,14 @@ public class BookingController(
         [FromRoute] Guid bookingId,
         CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(new CancelBookingRequest(bookingId), cancellationToken);
+        var result = await mediator.Send(new CancelBookingCommand(bookingId), cancellationToken);
             
-        if (result.IsFailure)
+        if (result.dto == null)
         {
-            return BadRequest(new { error = result.Error });
+            return BadRequest(new { error = result.message });
         }
         
-        return Ok(result.Value);
+        return Ok(result.dto);
     }
     
 }

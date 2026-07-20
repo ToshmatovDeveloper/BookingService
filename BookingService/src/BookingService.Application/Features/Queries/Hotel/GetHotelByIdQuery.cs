@@ -8,40 +8,40 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace BookingService.Application.Hotel.Get;
+namespace BookingService.Application.Features.Queries.Hotel;
 
-public record GetHotelByIdRequest(Guid Id) : IRequest<HotelDto>;
+public record GetHotelByIdQuery(Guid Id) : IRequest<HotelDto>;
 
-public class GetHotelByIdHandler(
+public class GetHotelByIdQueryHandler(
     ApplicationDbContext dbContext,
     IOptionsMonitor<CacheSettings> options,
     IMemoryCache cache,
-    ILogger<GetHotelByIdHandler> logger) : IRequestHandler<GetHotelByIdRequest, HotelDto>
+    ILogger<GetHotelByIdQueryHandler> logger) : IRequestHandler<GetHotelByIdQuery, HotelDto>
 {
-    public async Task<HotelDto> Handle(GetHotelByIdRequest request, CancellationToken cancellationToken)
+    public async Task<HotelDto> Handle(GetHotelByIdQuery query, CancellationToken cancellationToken)
     {
-        logger.LogInformation($"Started reading hotel by id : {request.Id}");
+        logger.LogInformation($"Started reading hotel by id : {query.Id}");
 
-        if (!cache.TryGetValue(request.Id, out Domain.Entities.Hotel? hotel))
+        if (!cache.TryGetValue(query.Id, out Domain.Entities.Hotel? hotel))
         {
             hotel = await dbContext.Hotels
-                .Where(x => x.Id == request.Id)
+                .Where(x => x.Id == query.Id)
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (hotel == null)
             {
-                logger.LogError($"Hotel with id : {request.Id} not found");
+                logger.LogError($"Hotel with id : {query.Id} not found");
 
                 throw new NotFoundException("Hotel not found");
             }
         
-            cache.Set(request.Id, hotel, options.CurrentValue.TimeToLive);
+            cache.Set(query.Id, hotel, options.CurrentValue.TimeToLive);
             
-            logger.LogInformation($"Hotel with id : {request.Id} found in db");
+            logger.LogInformation($"Hotel with id : {query.Id} found in db");
         }
         else
         {
-            logger.LogInformation($"Hotel with id : {request.Id} found in cache");
+            logger.LogInformation($"Hotel with id : {query.Id} found in cache");
         }
         
         return new HotelDto(hotel!.Name, hotel.Address, hotel.Floor, hotel.StarRating);

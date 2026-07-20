@@ -1,4 +1,4 @@
-using BookingService.Application.Hotel.Create;
+using BookingService.Application.Features.Commands.Hotel;
 using BookingService.Application.Settings.Cache;
 using BookingService.Application.Validation;
 using BookingService.Infrastructure;
@@ -29,7 +29,7 @@ builder.Services.Configure<CacheSettings>(
 
 builder.Services.AddMediatR(cfg =>
 {
-    cfg.RegisterServicesFromAssembly(typeof(CreateHotelRequest).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(CreateHotelCommand).Assembly);
     
     cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
 });

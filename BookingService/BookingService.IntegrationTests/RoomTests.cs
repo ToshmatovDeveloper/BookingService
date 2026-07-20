@@ -1,6 +1,5 @@
-﻿using BookingService.Application.Room.Create;
-using BookingService.Application.Room.Delete;
-using BookingService.Application.Room.Get;
+﻿using BookingService.Application.Features.Commands.Room;
+using BookingService.Application.Features.Queries.Room;
 using BookingService.Domain.DTOs;
 using BookingService.Domain.Entities;
 using BookingService.Domain.Enum;
@@ -25,7 +24,7 @@ public class RoomTests(BookingServiceTestWebFactory factory)
         var mediator = scope.ServiceProvider.GetRequiredService<ISender>();
         var cancellationToken = CancellationToken.None;
 
-        var hotel = new Hotel(Guid.NewGuid(), "Tower", "A", 12, HotelStarRating.FiveStar);
+        var hotel = new Hotel("Tower", "A", 12, HotelStarRating.FiveStar);
 
         dbContext.Hotels.Add(hotel);
         
@@ -35,11 +34,11 @@ public class RoomTests(BookingServiceTestWebFactory factory)
         
         //act
         
-        var result = await mediator.Send(new CreateRoomRequest(roomDto), cancellationToken);
+        var result = await mediator.Send(new CreateRoomCommand(roomDto), cancellationToken);
 
         //Assert
 
-        Assert.NotEqual(Guid.Empty, result);
+        Assert.NotNull(result);
     }
     
     [Fact]
@@ -51,25 +50,21 @@ public class RoomTests(BookingServiceTestWebFactory factory)
         var mediator = scope.ServiceProvider.GetRequiredService<ISender>();
         var cancellationToken = CancellationToken.None;
 
-        var hotel = new Hotel(Guid.NewGuid(), "Tower", "A", 12, HotelStarRating.FiveStar);
+        var hotel = new Hotel("Tower", "A", 12, HotelStarRating.FiveStar);
 
         dbContext.Hotels.Add(hotel);
         
         await dbContext.SaveChangesAsync(cancellationToken);
         
-        var roomId = Guid.NewGuid();
-
-        var room = new Room(roomId, 33, 12, hotel.Id, RoomType.FamilyRoom);
+        var room = new Room(33, 12, hotel.Id, RoomType.FamilyRoom);
         
         dbContext.Rooms.Add(room);
         
         await dbContext.SaveChangesAsync(cancellationToken);
         
-        //var roomDto = new RoomDto(hotel.Id, 22, 12, RoomType.OneBedroom);
-        
         //act
         
-        var result = await mediator.Send(new GetRoomByIdRequest(roomId), cancellationToken);
+        var result = await mediator.Send(new GetRoomByIdQuery(room.Id), cancellationToken);
 
         //Assert
 
@@ -88,13 +83,13 @@ public class RoomTests(BookingServiceTestWebFactory factory)
 
         var hotelId = Guid.NewGuid();
         
-        var hotel = new Hotel(hotelId, "Hotel A", "Qatar", 12, HotelStarRating.FiveStar);
+        var hotel = new Hotel("Hotel A", "Qatar", 12, HotelStarRating.FiveStar);
         
         dbContext.Hotels.Add(hotel);
         
         await dbContext.SaveChangesAsync(cancellationToken);
         
-        var room = new Room(Guid.NewGuid(), 33, 12, hotel.Id, RoomType.FamilyRoom);
+        var room = new Room(33, 12, hotel.Id, RoomType.FamilyRoom);
         
         dbContext.Rooms.Add(room);
         
@@ -102,7 +97,7 @@ public class RoomTests(BookingServiceTestWebFactory factory)
         
         //act
         
-        var result = await mediator.Send(new DeleteRoomRequest(Guid.NewGuid()), cancellationToken);
+        var result = await mediator.Send(new DeleteRoomCommand(Guid.NewGuid()), cancellationToken);
         
         //Assert
 

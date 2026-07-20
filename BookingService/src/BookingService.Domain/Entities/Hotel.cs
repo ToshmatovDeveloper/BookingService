@@ -6,16 +6,15 @@ public class Hotel
 {
     public Hotel() { }
     
-    public Hotel(Guid id, string name, string address, int floors, HotelStarRating starRating)
+    public Hotel(string name, string address, int floors, HotelStarRating starRating)
     {
-        Id = id;
         Name = name;
         Address = address;
         Floor =  floors;
         StarRating = starRating;
     }
-    
-    public Guid Id { get; init; }
+
+    public Guid Id { get; init; } = Guid.CreateVersion7();
 
     public string Name { get; init; } 
 

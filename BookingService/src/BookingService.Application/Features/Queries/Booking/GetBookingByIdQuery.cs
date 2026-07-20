@@ -8,44 +8,44 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace BookingService.Application.Booking.Get;
+namespace BookingService.Application.Features.Queries.Booking;
 
-public record GetBookingByIdRequest(Guid Id) : IRequest<BookingDto>;
+public record GetBookingByIdQuery(Guid Id) : IRequest<BookingDto>;
 
-public class GetBookingByIdHandler(
+public class GetBookingByIdQueryHandler(
     IMemoryCache cache,
     IOptionsMonitor<CacheSettings> options,
     ApplicationDbContext dbContext,
-    ILogger<GetBookingByIdHandler> logger) 
-    : IRequestHandler<GetBookingByIdRequest, BookingDto>
+    ILogger<GetBookingByIdQueryHandler> logger) 
+    : IRequestHandler<GetBookingByIdQuery, BookingDto>
 {
     public async Task<BookingDto> Handle(
-        GetBookingByIdRequest request,
+        GetBookingByIdQuery query,
         CancellationToken cancellationToken)
     {
-        logger.LogInformation($"Started reading booking by id : {request.Id}.");
+        logger.LogInformation($"Started reading booking by id : {query.Id}.");
 
-        if (!cache.TryGetValue(request.Id, out Domain.Entities.Booking? booking))
+        if (!cache.TryGetValue(query.Id, out Domain.Entities.Booking? booking))
         {
             booking = await dbContext.Bookings
-                .Where(x => x.Id == request.Id)
+                .Where(x => x.Id == query.Id)
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (booking == null)
             {
-                logger.LogError($"Booking with id : {request.Id} not found.");
+                logger.LogError($"Booking with id : {query.Id} not found.");
                 throw new NotFoundException("Booking not found");
             }
 
-            logger.LogInformation($"Booking with id : {request.Id} found from db.");
+            logger.LogInformation($"Booking with id : {query.Id} found from db.");
 
             cache.Set(
-                request.Id,
+                query.Id,
                 booking, options.CurrentValue.TimeToLive);
         }
         else
         {
-            logger.LogInformation($"Booking with id : {request.Id} found from cache.");
+            logger.LogInformation($"Booking with id : {query.Id} found from cache.");
         }
     
         return new BookingDto(

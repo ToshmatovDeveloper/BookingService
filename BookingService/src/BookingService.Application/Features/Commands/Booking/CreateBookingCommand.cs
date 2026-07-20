@@ -5,18 +5,18 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace BookingService.Application.Booking.Create;
+namespace BookingService.Application.Features.Commands.Booking;
 
-public record CreateBookingRequest(BookingDto BookingDto) : IRequest<Guid>;
+public record CreateBookingCommand(BookingDto BookingDto) : IRequest<BookingDto>;
 
-public class CreateBookingHandler(
+public class CreateBookingCommandHandler(
     ApplicationDbContext dbContext,
-    ILogger<CreateBookingHandler> logger) : IRequestHandler<CreateBookingRequest, Guid>
+    ILogger<CreateBookingCommandHandler> logger) : IRequestHandler<CreateBookingCommand, BookingDto>
 {
-    public async Task<Guid> Handle(CreateBookingRequest request, CancellationToken cancellationToken)
+    public async Task<BookingDto> Handle(CreateBookingCommand command, CancellationToken cancellationToken)
     {
         logger.LogInformation("Started creating booking");
-        var dto = request.BookingDto;
+        var dto = command.BookingDto;
 
         var isAvailable = await CheckAvailability(dto.RoomId, dto.StartDate, dto.EndDate, cancellationToken);
         
@@ -28,7 +28,7 @@ public class CreateBookingHandler(
         BookingStatus status = BookingStatus.Confirmed;
         
         var booking = new Domain.Entities.Booking(
-            Guid.NewGuid(), dto.HotelId, dto.RoomId, dto.StartDate, dto.EndDate, status);
+            dto.HotelId, dto.RoomId, dto.StartDate, dto.EndDate, status);
         
         try
         {
@@ -41,9 +41,10 @@ public class CreateBookingHandler(
         catch (Exception ex)
         {
             logger.LogError(ex.Message);
+            throw;
         }
         
-        return booking.Id;
+        return new BookingDto(booking.HotelId, booking.RoomId, booking.StartDate, booking.EndDate);
     }
     
     private async Task<bool> CheckAvailability(
@@ -76,7 +77,6 @@ public class CreateBookingHandler(
                 return false;
             }
         }
-
         return true;
     }
 

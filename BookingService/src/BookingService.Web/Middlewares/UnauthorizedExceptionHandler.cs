@@ -1,4 +1,5 @@
 ﻿using BookingService.Application.CustomExceptions;
+using BookingService.Auth.Application.CustomExceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,24 +12,24 @@ internal sealed class UnauthorizedExceptionHandler(ILogger<UnauthorizedException
         Exception exception,
         CancellationToken cancellationToken)
     {
-        var notFoundException = exception as NotFoundException 
-                                ?? exception.InnerException as NotFoundException;
+        var unauthorizedException = exception as UnauthorizedException 
+                                    ?? exception.InnerException as UnauthorizedException;
 
-        if (notFoundException is null)
+        if (unauthorizedException is null)
         {
             return false; 
         }
 
         logger.LogError(
-            notFoundException,
-            "NotFound exception occurred: {Message}",
-            notFoundException.Message);
+            unauthorizedException,
+            "Unauthorized exception occurred: {Message}",
+            unauthorizedException.Message);
 
         var problemDetails = new ProblemDetails
         {
             Status = StatusCodes.Status401Unauthorized,
-            Title = "Not Found",
-            Detail = notFoundException.Message
+            Title = "Unauthorized",
+            Detail = unauthorizedException.Message
         };
 
         httpContext.Response.StatusCode = problemDetails.Status.Value;

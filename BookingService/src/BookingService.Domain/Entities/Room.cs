@@ -2,9 +2,9 @@
 
 namespace BookingService.Domain.Entities;
 
-public class Room(Guid id, uint roomNumber, int floorNumber, Guid hotelId, RoomType roomType)
+public class Room(uint roomNumber, int floorNumber, Guid hotelId, RoomType roomType)
 {
-    public Guid Id { get; init; } = id;
+    public Guid Id { get; init; } = Guid.CreateVersion7();
     
     public Guid HotelId { get; init; } = hotelId;
     

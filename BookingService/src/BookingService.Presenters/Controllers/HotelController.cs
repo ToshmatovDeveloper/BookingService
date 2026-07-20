@@ -1,6 +1,5 @@
-﻿using BookingService.Application.Hotel.Create;
-using BookingService.Application.Hotel.Delete;
-using BookingService.Application.Hotel.Get;
+﻿using BookingService.Application.Features.Commands.Hotel;
+using BookingService.Application.Features.Queries.Hotel;
 using BookingService.Domain.DTOs;
 using CSharpFunctionalExtensions;
 using MediatR;
@@ -15,10 +14,10 @@ public class HotelController(
 {
     [HttpPost]
     public async Task<IActionResult> CreateHotel(
-        CreateHotelRequest request,
+        CreateHotelCommand command,
         CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(request, cancellationToken);
+        var result = await mediator.Send(command, cancellationToken);
     
         return Ok(result);
     }
@@ -28,7 +27,7 @@ public class HotelController(
         [FromRoute] Guid hotelId,
         CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(new GetHotelByIdRequest(hotelId), cancellationToken);
+        var result = await mediator.Send(new GetHotelByIdQuery(hotelId), cancellationToken);
            
         var hotel = new HotelDto(result.Name, result.Address, result.Floors, result.StarRating);
         
@@ -40,7 +39,7 @@ public class HotelController(
         [FromRoute] Guid hotelId,
         CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(new DeleteHotelRequest(hotelId), cancellationToken);
+        var result = await mediator.Send(new DeleteHotelCommand(hotelId), cancellationToken);
             
         return Ok(result);
     }

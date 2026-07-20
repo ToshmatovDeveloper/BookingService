@@ -1,9 +1,9 @@
-﻿using BookingService.Application.Hotel.Create;
+﻿using BookingService.Application.Features.Commands.Hotel;
 using FluentValidation;
 
 namespace BookingService.Application.Validation;
 
-public class CreateHotelRequestValidator : AbstractValidator<CreateHotelRequest>
+public class CreateHotelRequestValidator : AbstractValidator<CreateHotelCommand>
 {
     public CreateHotelRequestValidator()
     {

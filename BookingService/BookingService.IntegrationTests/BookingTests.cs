@@ -1,6 +1,5 @@
-﻿using BookingService.Application.Booking.Cancel;
-using BookingService.Application.Booking.Create;
-using BookingService.Application.Booking.Get;
+﻿using BookingService.Application.Features.Commands.Booking;
+using BookingService.Application.Features.Queries.Booking;
 using BookingService.Domain.DTOs;
 using BookingService.Domain.Entities;
 using BookingService.Domain.Enum;
@@ -25,13 +24,13 @@ public class BookingTests(BookingServiceTestWebFactory factory)
         var mediator = scope.ServiceProvider.GetRequiredService<ISender>();
         var cancellationToken = CancellationToken.None;
 
-        var hotel = new Hotel(Guid.NewGuid(), "Tower", "A", 12, HotelStarRating.FiveStar);
+        var hotel = new Hotel("Tower", "A", 12, HotelStarRating.FiveStar);
 
         dbContext.Hotels.Add(hotel);
         
         await dbContext.SaveChangesAsync(cancellationToken);
         
-        var room = new Room(Guid.NewGuid(), 12, 22, hotel.Id, RoomType.FamilyRoom);
+        var room = new Room(12, 22, hotel.Id, RoomType.FamilyRoom);
         
         dbContext.Rooms.Add(room);
         
@@ -39,7 +38,7 @@ public class BookingTests(BookingServiceTestWebFactory factory)
         
         //act
         
-        var result = await mediator.Send(new CreateBookingRequest(
+        var result = await mediator.Send(new CreateBookingCommand(
             new BookingDto(
                 hotel.Id,
                 room.Id,
@@ -48,7 +47,7 @@ public class BookingTests(BookingServiceTestWebFactory factory)
 
         //assert
         
-        Assert.NotEqual(Guid.Empty, result);
+        Assert.NotNull(result);
     }
 
     [Fact]
@@ -62,7 +61,6 @@ public class BookingTests(BookingServiceTestWebFactory factory)
         var cancellationToken = CancellationToken.None;
 
         var hotel = new Hotel(
-            Guid.NewGuid(),
             "Tower",
             "A",
             12, 
@@ -73,7 +71,6 @@ public class BookingTests(BookingServiceTestWebFactory factory)
         await dbContext.SaveChangesAsync(cancellationToken);
         
         var room = new Room(
-            Guid.NewGuid(),
             12,
             22,
             hotel.Id,
@@ -84,7 +81,6 @@ public class BookingTests(BookingServiceTestWebFactory factory)
         await dbContext.SaveChangesAsync(cancellationToken);
 
         var booking = new Booking(
-            Guid.NewGuid(),
             hotel.Id,
             room.Id, 
             DateTime.UtcNow.AddDays(3),
@@ -101,7 +97,7 @@ public class BookingTests(BookingServiceTestWebFactory factory)
         
         try
         {
-            await mediator.Send(new CreateBookingRequest(
+            await mediator.Send(new CreateBookingCommand(
                 new BookingDto(
                         hotel.Id,
                         room.Id,
@@ -131,7 +127,6 @@ public class BookingTests(BookingServiceTestWebFactory factory)
         var cancellationToken = CancellationToken.None;
 
         var hotel = new Hotel(
-            Guid.NewGuid(),
             "Tower",
             "A",
             12, 
@@ -142,7 +137,6 @@ public class BookingTests(BookingServiceTestWebFactory factory)
         await dbContext.SaveChangesAsync(cancellationToken);
         
         var room = new Room(
-            Guid.NewGuid(),
             12,
             22,
             hotel.Id,
@@ -153,7 +147,6 @@ public class BookingTests(BookingServiceTestWebFactory factory)
         await dbContext.SaveChangesAsync(cancellationToken);
 
         var booking = new Booking(
-            Guid.NewGuid(),
             hotel.Id,
             room.Id, 
             DateTime.UtcNow.AddDays(3),
@@ -166,7 +159,7 @@ public class BookingTests(BookingServiceTestWebFactory factory)
         
         //act
 
-        var getResult = await mediator.Send(new GetBookingByIdRequest(booking.Id), cancellationToken);
+        var getResult = await mediator.Send(new GetBookingByIdQuery(booking.Id), cancellationToken);
         
         //assert
 
@@ -184,7 +177,6 @@ public class BookingTests(BookingServiceTestWebFactory factory)
         var cancellationToken = CancellationToken.None;
 
         var hotel = new Hotel(
-            Guid.NewGuid(),
             "Tower",
             "A",
             12, 
@@ -195,7 +187,6 @@ public class BookingTests(BookingServiceTestWebFactory factory)
         await dbContext.SaveChangesAsync(cancellationToken);
         
         var room = new Room(
-            Guid.NewGuid(),
             12,
             22,
             hotel.Id,
@@ -206,7 +197,6 @@ public class BookingTests(BookingServiceTestWebFactory factory)
         await dbContext.SaveChangesAsync(cancellationToken);
 
         var booking = new Booking(
-            Guid.NewGuid(),
             hotel.Id,
             room.Id, 
             DateTime.UtcNow.AddDays(3),
@@ -220,11 +210,11 @@ public class BookingTests(BookingServiceTestWebFactory factory)
         //act
 
         var getResult = await mediator
-            .Send(new CancelBookingRequest(booking.Id), cancellationToken);
+            .Send(new CancelBookingCommand(booking.Id), cancellationToken);
         
         //assert
 
-        Assert.Equal(true, getResult);
+        Assert.Equal("Booking cancelled successfully", getResult.message);
     }
 
     public Task InitializeAsync()

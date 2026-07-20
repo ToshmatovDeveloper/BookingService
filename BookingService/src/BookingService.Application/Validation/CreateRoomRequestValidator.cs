@@ -1,9 +1,9 @@
-﻿using BookingService.Application.Room.Create;
+﻿using BookingService.Application.Features.Commands.Room;
 using FluentValidation;
 
 namespace BookingService.Application.Validation;
 
-public class CreateRoomRequestValidator : AbstractValidator<CreateRoomRequest>
+public class CreateRoomRequestValidator : AbstractValidator<CreateRoomCommand>
 {
     public CreateRoomRequestValidator()
     {

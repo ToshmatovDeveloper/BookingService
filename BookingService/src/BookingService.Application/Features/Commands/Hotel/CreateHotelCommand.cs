@@ -4,24 +4,24 @@ using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
-namespace BookingService.Application.Hotel.Create;
+namespace BookingService.Application.Features.Commands.Hotel;
 
-public record CreateHotelRequest(HotelDto Dto) : IRequest<Guid>;
+public record CreateHotelCommand(HotelDto Dto) : IRequest<HotelDto>;
 
-public class CreateHotelHandler(
-    ILogger<CreateHotelHandler> logger,
+public class CreateHotelCommandHandler(
+    ILogger<CreateHotelCommandHandler> logger,
     ApplicationDbContext dbContext,
-    IValidator<CreateHotelRequest> validator) : IRequestHandler<CreateHotelRequest, Guid>
+    IValidator<CreateHotelCommand> validator) : IRequestHandler<CreateHotelCommand, HotelDto>
 {
-    public async Task<Guid> Handle(CreateHotelRequest request, CancellationToken cancellationToken)
+    public async Task<HotelDto> Handle(CreateHotelCommand command, CancellationToken cancellationToken)
     {
         logger.LogInformation("Started creating hotel");
-        var dto = request.Dto;
+        var dto = command.Dto;
 
-        await validator.ValidateAndThrowAsync(request, cancellationToken);
+        await validator.ValidateAndThrowAsync(command, cancellationToken);
         
         var hotel = new Domain.Entities.Hotel(
-            Guid.NewGuid(), dto.Name, dto.Address, dto.Floors, dto.StarRating);
+            dto.Name, dto.Address, dto.Floors, dto.StarRating);
         
         try
         {
@@ -34,8 +34,9 @@ public class CreateHotelHandler(
         catch (Exception ex)
         {
             logger.LogError(ex.Message);
+            throw;
         }
         
-        return  hotel.Id;
+        return  new HotelDto(hotel.Name, hotel.Address, hotel.Floor, hotel.StarRating);
     }
 }

@@ -13,7 +13,7 @@ namespace BookingService.Presenters.Controllers;
 public class HotelController(
     IMediator mediator): ControllerBase
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     [HttpPost]
     public async Task<IActionResult> CreateHotel(
         CreateHotelCommand command,

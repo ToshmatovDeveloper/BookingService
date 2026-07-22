@@ -79,14 +79,37 @@ public class UserLoginCommandHandler(
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.ASCII.GetBytes(secretKey);
 
-        var tokenDescriptor = new SecurityTokenDescriptor
+        var validationParameters = new TokenValidationParameters
         {
-            Expires = DateTime.UtcNow.AddMinutes(options.CurrentValue.ExpirationInMinutes),
-            SigningCredentials = new SigningCredentials(
-                new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            ValidateIssuer = true,   
+            ValidateAudience = true, 
+            ValidateLifetime = true,  
+            ClockSkew = TimeSpan.Zero
         };
+
+        try
+        {
+            var principal = tokenHandler.ValidateToken(refreshToken, validationParameters, out SecurityToken validatedToken);
         
-        var token = tokenHandler.CreateToken(tokenDescriptor);
-        return tokenHandler.WriteToken(token);
+            var userClaims = principal.Identity as ClaimsIdentity;
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = userClaims, 
+                Expires = DateTime.UtcNow.AddMinutes(options.CurrentValue.ExpirationInMinutes),
+                SigningCredentials = new SigningCredentials(
+                    new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+        }
+        catch (Exception ex)
+        {
+            throw new SecurityTokenException("Неверный или просроченный Refresh Token", ex);
+        }
     }
+
 }

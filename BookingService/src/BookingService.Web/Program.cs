@@ -1,11 +1,11 @@
 using BookingService.Application.Features.Commands.Hotel;
 using BookingService.Application.Validation;
 using BookingService.Auth.Application.Features;
+using BookingService.Auth.Application.Features.Tokens;
 using BookingService.Auth.Application.Validation;
 using BookingService.Auth.Domain.Entities;
 using BookingService.Auth.Infrastructure;
 using BookingService.Infrastructure;
-using BookingService.Web;
 using BookingService.Web.Extensions;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
@@ -49,6 +49,8 @@ builder.Services.AddMediatR(cfg =>
 });
 
 builder.Services.AddMemoryCache();
+
+builder.Services.AddScoped<TokenProvider>();
 
 var app = builder.Build();
 

@@ -1,17 +1,11 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
-using BookingService.Auth.Application.CustomExceptions;
+﻿using BookingService.Auth.Application.CustomExceptions;
 using BookingService.Auth.Application.Features.Tokens;
 using BookingService.Auth.Application.Settings;
 using BookingService.Auth.Domain.Entities;
+using BookingService.Auth.Infrastructure;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.JsonWebTokens;
-using Microsoft.IdentityModel.Tokens;
-using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
 
 namespace BookingService.Auth.Application.Features;
 
@@ -20,8 +14,10 @@ public record UserLoginCommand(string Email, string Password) : IRequest<UserLog
 public record UserLoginResponse(string AccessToken, string RefreshToken, Guid UserId, string Email);
 
 public class UserLoginCommandHandler(
+    AuthDbContext dbContext,
     UserManager<Account> userManager,
-    IOptionsMonitor<JwtSettings> options) : IRequestHandler<UserLoginCommand, UserLoginResponse>
+    IOptionsMonitor<JwtSettings> options,
+    TokenProvider tokenProvider) : IRequestHandler<UserLoginCommand, UserLoginResponse>
 {
     public async Task<UserLoginResponse> Handle(UserLoginCommand command, CancellationToken cancellationToken)
     {
@@ -32,25 +28,20 @@ public class UserLoginCommandHandler(
             throw new UnauthorizedException("Invalid login or password.");
         }
         
-        var roles = await userManager.GetRolesAsync(user);
+        var accessToken = tokenProvider.GenerateAccessToken(user);
         
-        List<Claim> claims =
-        [                  
-            new (JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new (JwtRegisteredClaimNames.Email, user.Email!),
-        ];
-        
-        foreach (var role in roles)
+        var refreshToken = new RefreshToken
         {
-            claims.Add(new Claim(ClaimTypes.Role, role));
-        }
-
-        var tokenHandlers = new TokenHandlers(options);
+            Id = Guid.CreateVersion7(),
+            AccountId = user.Id,
+            Token = tokenProvider.GenerateRefreshToken(),
+            ExpiresOnUtc = DateTime.UtcNow.AddDays(options.CurrentValue.RefreshTokenExpirationInDays)
+        };
         
-        var accessToken = tokenHandlers.GenerateAccessToken(claims, options.CurrentValue.Secret);
+        await dbContext.RefreshTokens.AddAsync(refreshToken, cancellationToken); 
         
-        var refreshToken = tokenHandlers.GenerateRefreshToken();
+        await dbContext.SaveChangesAsync(cancellationToken);
         
-        return new UserLoginResponse(accessToken, refreshToken, user.Id, user.Email!);
+        return new UserLoginResponse(accessToken, refreshToken.Token, user.Id, user.Email!);
     }
 }

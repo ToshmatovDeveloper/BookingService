@@ -1,5 +1,6 @@
 ﻿using BookingService.Auth.Application.Features;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BookingService.Auth.Presenters.Controllers;
@@ -9,6 +10,7 @@ namespace BookingService.Auth.Presenters.Controllers;
 public class UserController(
     IMediator mediator) : ControllerBase
 {
+    [AllowAnonymous]
     [HttpPost("register")]
     public async Task<IActionResult> RegisterUser(
         UserRegisterCommand command,
@@ -19,11 +21,19 @@ public class UserController(
         return Ok(result);
     }
     
+    [AllowAnonymous]
     [HttpPost("login")]
     public async Task<IActionResult> UserLogin(UserLoginCommand command, CancellationToken ct)
     {
         var result = await mediator.Send(command, ct);
         return Ok(result);
     }
-
+    
+    [AllowAnonymous]
+    [HttpPost("refresh")]
+    public async Task<IActionResult> UserLoginWithRefreshToken(RefreshTokenCommand command, CancellationToken ct)
+    {
+        var result = await mediator.Send(command, ct);
+        return Ok(result);
+    } 
 }

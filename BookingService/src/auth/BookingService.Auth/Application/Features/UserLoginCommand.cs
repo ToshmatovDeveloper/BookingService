@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using BookingService.Auth.Application.CustomExceptions;
+using BookingService.Auth.Application.Features.Tokens;
 using BookingService.Auth.Application.Settings;
 using BookingService.Auth.Domain.Entities;
 using MediatR;
@@ -32,84 +33,24 @@ public class UserLoginCommandHandler(
         }
         
         var roles = await userManager.GetRolesAsync(user);
-         
-        var signinKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(options.CurrentValue.Secret));
         
         List<Claim> claims =
         [                  
             new (JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new (JwtRegisteredClaimNames.Email, user.Email!),
-            ..roles.Select(role => new Claim(ClaimTypes.Role, role))
         ];
-            
-        var accessToken = GenerateAccessToken(claims, options.CurrentValue.Secret);
         
-        var refreshToken = GenerateRefreshToken();
+        foreach (var role in roles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
+
+        var tokenHandlers = new TokenHandlers(options);
+        
+        var accessToken = tokenHandlers.GenerateAccessToken(claims, options.CurrentValue.Secret);
+        
+        var refreshToken = tokenHandlers.GenerateRefreshToken();
         
         return new UserLoginResponse(accessToken, refreshToken, user.Id, user.Email!);
     }
-
-    private string GenerateAccessToken(List<Claim> claim, string secretKey)
-    {
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes(secretKey);
-
-        var tokenDescriptor = new SecurityTokenDescriptor
-        {
-            Subject = new ClaimsIdentity(claim),
-            Expires = DateTime.UtcNow.AddMinutes(options.CurrentValue.ExpirationInMinutes),
-            SigningCredentials = new SigningCredentials(
-                new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-        };
-        
-        var token = tokenHandler.CreateToken(tokenDescriptor);
-        return tokenHandler.WriteToken(token);
-    }
-
-    private string GenerateRefreshToken()
-    {
-        var randomNumber = new byte[32];
-        using var rng = RandomNumberGenerator.Create();
-        rng.GetBytes(randomNumber);
-        return Convert.ToBase64String(randomNumber);
-    }
-    
-    private string GenerateAccessTokenFromRefreshToken(string refreshToken, string secretKey)
-    {
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes(secretKey);
-
-        var validationParameters = new TokenValidationParameters
-        {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(key),
-            ValidateIssuer = true,   
-            ValidateAudience = true, 
-            ValidateLifetime = true,  
-            ClockSkew = TimeSpan.Zero
-        };
-
-        try
-        {
-            var principal = tokenHandler.ValidateToken(refreshToken, validationParameters, out SecurityToken validatedToken);
-        
-            var userClaims = principal.Identity as ClaimsIdentity;
-
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = userClaims, 
-                Expires = DateTime.UtcNow.AddMinutes(options.CurrentValue.ExpirationInMinutes),
-                SigningCredentials = new SigningCredentials(
-                    new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            };
-
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
-        }
-        catch (Exception ex)
-        {
-            throw new SecurityTokenException("Неверный или просроченный Refresh Token", ex);
-        }
-    }
-
 }

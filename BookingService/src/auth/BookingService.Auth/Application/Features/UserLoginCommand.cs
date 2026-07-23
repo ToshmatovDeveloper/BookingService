@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using BookingService.Auth.Application.BackgroundServices;
 using BookingService.Auth.Application.CustomExceptions;
 using BookingService.Auth.Application.Features.Tokens;
 using BookingService.Auth.Application.Settings;

@@ -1,6 +1,9 @@
 using BookingService.Application.Features.Commands.Hotel;
 using BookingService.Application.Validation;
+using BookingService.Auth.Application.BackgroundServices;
 using BookingService.Auth.Application.Features;
+using BookingService.Auth.Application.Features.Tokens;
+using BookingService.Auth.Application.Interfaces;
 using BookingService.Auth.Application.Validation;
 using BookingService.Auth.Domain.Entities;
 using BookingService.Auth.Infrastructure;
@@ -17,6 +20,8 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 var authServiceConnectionString = builder.Configuration.GetConnectionString("AuthServiceConnection");
 
 builder.Services.AddControllers();
+builder.Services.AddHostedService<GenerateAccessTokenBackgroundService>();
+builder.Services.AddScoped<ITokenHandlers, TokenHandlers>();
 
 builder.Services.AddCustomOpenApi(); 
 

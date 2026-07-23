@@ -2,13 +2,14 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using BookingService.Auth.Application.Interfaces;
 using BookingService.Auth.Application.Settings;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace BookingService.Auth.Application.Features.Tokens;
 
-public class TokenHandlers(IOptionsMonitor<JwtSettings> options)
+public class TokenHandlers(IOptionsMonitor<JwtSettings> options) : ITokenHandlers
 {
     public string GenerateAccessToken(List<Claim> claim, string secretKey)
     {

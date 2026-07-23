@@ -1,4 +1,8 @@
-﻿using BookingService.Auth.Application.CustomExceptions;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using BookingService.Auth.Application.CustomExceptions;
+using BookingService.Auth.Application.Features.Tokens;
+using BookingService.Auth.Application.Settings;
 using BookingService.Auth.Domain.Entities;
 using BookingService.Auth.Infrastructure;
 using FluentValidation;
@@ -6,18 +10,22 @@ using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace BookingService.Auth.Application.Features;
 
-public record UserRegisterCommand(string UserName, string Email, string Password) : IRequest<bool>;
+public record UserRegisterCommand(string UserName, string Email, string Password) : IRequest<UserRegisterResponse>;
+
+public record UserRegisterResponse(string accessToken, string refreshToken, string message);
 
 public class UserRegisterCommandHandler(
     UserManager<Account> userManager,
     RoleManager<Role> roleManager,
     AuthDbContext  dbContext,
-    ILogger<UserRegisterCommandHandler> logger) : IRequestHandler<UserRegisterCommand, bool>
+    IOptionsMonitor<JwtSettings> options,
+    ILogger<UserRegisterCommandHandler> logger) : IRequestHandler<UserRegisterCommand, UserRegisterResponse>
 {
-    public async Task<bool> Handle(
+    public async Task<UserRegisterResponse> Handle(
         UserRegisterCommand command,
         CancellationToken cancellationToken)
     {
@@ -63,9 +71,28 @@ public class UserRegisterCommandHandler(
             logger.LogError("Failed to add role to user.");
             throw new FailedAddUserRoleException("Failed to add role to user.");
         }
+
+        var roles = await userManager.GetRolesAsync(user);
+        
+        List<Claim> claims =
+        [                  
+            new (JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new (JwtRegisteredClaimNames.Email, user.Email!),
+        ];
+        
+        foreach (var userRole in roles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, userRole));
+        }
+        
+        var tokenHandlers = new TokenHandlers(options);
+        
+        var accessToken = tokenHandlers.GenerateAccessToken(claims, options.CurrentValue.Secret);
+        
+        var refreshToken = tokenHandlers.GenerateRefreshToken();
         
         logger.LogInformation("User successfully registered.");
         
-        return true;
+        return new UserRegisterResponse(accessToken, refreshToken, "Welcome to Booking Service");
     }
 }

@@ -5,7 +5,6 @@ using BookingService.Auth.Application.Features.Tokens;
 using BookingService.Auth.Application.Settings;
 using BookingService.Auth.Domain.Entities;
 using BookingService.Auth.Infrastructure;
-using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -23,6 +22,7 @@ public class UserRegisterCommandHandler(
     RoleManager<Role> roleManager,
     AuthDbContext  dbContext,
     IOptionsMonitor<JwtSettings> options,
+    TokenProvider tokenProvider,
     ILogger<UserRegisterCommandHandler> logger) : IRequestHandler<UserRegisterCommand, UserRegisterResponse>
 {
     public async Task<UserRegisterResponse> Handle(
@@ -59,7 +59,7 @@ public class UserRegisterCommandHandler(
         
         var role = new Role("User");
 
-        if (!roleManager.RoleExistsAsync(role.Name).Result)
+        if (!await roleManager.RoleExistsAsync(role.Name))
         {
             await roleManager.CreateAsync(role);
         }
@@ -85,14 +85,22 @@ public class UserRegisterCommandHandler(
             claims.Add(new Claim(ClaimTypes.Role, userRole));
         }
         
-        var tokenHandlers = new TokenHandlers(options);
+        var accessToken = tokenProvider.GenerateAccessToken(user);
+
+        var refreshToken = new RefreshToken
+        {
+            Id = Guid.CreateVersion7(),
+            AccountId = user.Id,
+            Token = tokenProvider.GenerateRefreshToken(),
+            ExpiresOnUtc = DateTime.UtcNow.AddDays(options.CurrentValue.RefreshTokenExpirationInDays)
+        };
         
-        var accessToken = tokenHandlers.GenerateAccessToken(claims, options.CurrentValue.Secret);
+        await dbContext.RefreshTokens.AddAsync(refreshToken, cancellationToken);
         
-        var refreshToken = tokenHandlers.GenerateRefreshToken();
+        await dbContext.SaveChangesAsync(cancellationToken);
         
         logger.LogInformation("User successfully registered.");
         
-        return new UserRegisterResponse(accessToken, refreshToken, "Welcome to Booking Service");
+        return new UserRegisterResponse(accessToken, refreshToken.Token, "Welcome to Booking Service");
     }
 }

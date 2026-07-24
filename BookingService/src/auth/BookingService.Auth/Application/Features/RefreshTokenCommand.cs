@@ -1,4 +1,5 @@
-﻿using BookingService.Auth.Application.CustomExceptions;
+﻿
+using BookingService.Auth.Application.CustomExceptions;
 using BookingService.Auth.Application.Features.Tokens;
 using BookingService.Auth.Application.Settings;
 using BookingService.Auth.Domain.Entities;

@@ -11,8 +11,12 @@ using BookingService.Web.Extensions;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, loggerConfig) =>
+    loggerConfig.ReadFrom.Configuration(context.Configuration));
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 var authServiceConnectionString = builder.Configuration.GetConnectionString("AuthServiceConnection");
@@ -64,6 +68,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseExceptionHandler();
 app.UseHttpsRedirection();
+app.UseSerilogRequestLogging();
 
 app.UseAuthentication();
 app.UseAuthorization();

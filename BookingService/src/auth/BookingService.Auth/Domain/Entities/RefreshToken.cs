@@ -8,6 +8,8 @@ public class RefreshToken
     
     public Guid AccountId { get; set; }
     
+    public DateTime CreatedOn { get; set; } = DateTime.UtcNow;
+    
     public DateTime ExpiresOnUtc { get; set; }
     
     public Account Account { get; set; }

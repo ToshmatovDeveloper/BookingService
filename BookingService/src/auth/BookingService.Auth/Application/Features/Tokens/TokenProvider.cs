@@ -5,6 +5,9 @@ using System.Text;
 using BookingService.Auth.Application.Interfaces;
 using BookingService.Auth.Application.Settings;
 using BookingService.Auth.Domain.Entities;
+using BookingService.Auth.Infrastructure;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
@@ -101,4 +104,27 @@ public class TokenProvider(IOptionsMonitor<JwtSettings> options)
             throw new SecurityTokenException("Error validating or generating token", ex);
         }
     }
+
+    public record CleanOldTokensCommand : IRequest<bool>;
+
+    public class CleanOldTokensCommandHandler(AuthDbContext db) : IRequestHandler<CleanOldTokensCommand, bool>
+    {
+        public async Task<bool> Handle(CleanOldTokensCommand request, CancellationToken cancellationToken)
+        {
+            var latestTokenIds = await db.RefreshTokens
+                .GroupBy(rt => rt.AccountId)
+                .Select(g => g.OrderByDescending(rt => rt.CreatedOn).Select(rt => rt.Id).FirstOrDefault())
+                .ToListAsync(cancellationToken);
+
+            if (latestTokenIds.Count == 0) 
+                return false;
+
+            var deletedCount = await db.RefreshTokens
+                .Where(rt => !latestTokenIds.Contains(rt.Id))
+                .ExecuteDeleteAsync(cancellationToken);
+
+            return true;
+        }
+    }
+
 }

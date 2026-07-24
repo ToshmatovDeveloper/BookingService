@@ -1,5 +1,6 @@
 using BookingService.Application.Features.Commands.Hotel;
 using BookingService.Application.Validation;
+using BookingService.Auth.Application.BackgroundServices;
 using BookingService.Auth.Application.Features;
 using BookingService.Auth.Application.Features.Tokens;
 using BookingService.Auth.Application.Validation;
@@ -51,6 +52,7 @@ builder.Services.AddMediatR(cfg =>
 builder.Services.AddMemoryCache();
 
 builder.Services.AddScoped<TokenProvider>();
+builder.Services.AddHostedService<RefreshToKenCleaner>();
 
 var app = builder.Build();
 

@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi;
 
@@ -9,47 +8,30 @@ public static class OpenApiExtensions
 {
     public static void AddCustomOpenApi(this IServiceCollection services)
     {
-        services.AddOpenApi(options =>
+        services.AddSwaggerGen(options =>
         {
-            options.AddDocumentTransformer((document, context, cancellationToken) =>
-            {
-                if (document == null) return Task.CompletedTask;
-
-                var scheme = (IOpenApiSecurityScheme)new OpenApiSecurityScheme
-                {
-                    Type = SecuritySchemeType.Http,
-                    Scheme = JwtBearerDefaults.AuthenticationScheme, 
-                    BearerFormat = "JWT",
-                    Description = "Введите ваш JWT access token в поле ниже"
-                };
-
-                document.Components ??= new OpenApiComponents();
-    
-                if (document.Components.SecuritySchemes == null)
-                {
-                    document.Components.SecuritySchemes = new Dictionary<string, IOpenApiSecurityScheme>();
-                }
-
-                document.Components.SecuritySchemes["Bearer"] = scheme;
-
-                return Task.CompletedTask;
+            options.SwaggerDoc("v1", new OpenApiInfo 
+            { 
+                Title = "BookingService API", 
+                Version = "v1" 
             });
 
-
-            options.AddOperationTransformer((operation, context, cancellationToken) =>
+            var securityScheme = new OpenApiSecurityScheme
             {
-                if (operation == null || context?.Document == null) return Task.CompletedTask;
+                Name = "Authorization",
+                Type = SecuritySchemeType.Http,
+                Scheme = JwtBearerDefaults.AuthenticationScheme,
+                BearerFormat = "JWT",
+                In = ParameterLocation.Header,
+                Description = "Введите ваш JWT access token в поле ниже. Пример: 'eyJhbGciOi...'"
+            };
 
-                var schemeRef = new OpenApiSecuritySchemeReference("Bearer", context.Document);
-                var requirement = new OpenApiSecurityRequirement
-                {
-                    [schemeRef] = new List<string>()
-                };
+            options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, securityScheme);
 
-                operation.Security ??= new List<OpenApiSecurityRequirement>();
-                operation.Security.Add(requirement);
-
-                return Task.CompletedTask;
+            // Используем явное создание List<string>() вместо Array.Empty<string>()
+            options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+            {
+                [new OpenApiSecuritySchemeReference(JwtBearerDefaults.AuthenticationScheme, document)] = new List<string>()
             });
         });
     }

@@ -2,13 +2,15 @@
 
 namespace BookingService.Domain.Entities;
 
-public class Booking(Guid hotelId, Guid roomId, DateTime startDate, DateTime endDate, BookingStatus Status)
+public class Booking(Guid hotelId, Guid roomId, Guid userId, DateTime startDate, DateTime endDate, BookingStatus Status)
 {
     public Guid Id { get; set; } = Guid.CreateVersion7();
 
     public Guid HotelId { get; set; } = hotelId;
 
     public Guid RoomId { get; set; } = roomId;
+
+    public Guid UserId { get; set; } = userId;
     
     public Room? Room { get; set; }
 

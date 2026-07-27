@@ -28,7 +28,9 @@ public class UserLoginCommandHandler(
             throw new UnauthorizedException("Invalid login or password.");
         }
         
-        var accessToken = tokenProvider.GenerateAccessToken(user);
+        var roles = await userManager.GetRolesAsync(user);
+        
+        var accessToken = tokenProvider.GenerateAccessToken(user, roles);
         
         var refreshToken = new RefreshToken
         {

@@ -1,10 +1,10 @@
-﻿
-using BookingService.Auth.Application.CustomExceptions;
+﻿using BookingService.Auth.Application.CustomExceptions;
 using BookingService.Auth.Application.Features.Tokens;
 using BookingService.Auth.Application.Settings;
 using BookingService.Auth.Domain.Entities;
 using BookingService.Auth.Infrastructure;
 using MediatR;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -17,7 +17,8 @@ public record RefreshTokenResponse(string AccessToken, string RefreshToken);
 public class RefreshTokenCommandHandler(
     AuthDbContext dbContext,
     TokenProvider provider,
-    IOptionsMonitor<JwtSettings> options) : IRequestHandler<RefreshTokenCommand, RefreshTokenResponse>
+    IOptionsMonitor<JwtSettings> options,
+    UserManager<Account> userManager) : IRequestHandler<RefreshTokenCommand, RefreshTokenResponse> 
 {
     public async Task<RefreshTokenResponse> Handle(RefreshTokenCommand command, CancellationToken cancellationToken)
     {
@@ -30,7 +31,9 @@ public class RefreshTokenCommandHandler(
             throw new UnauthorizedException("Invalid or expired refresh token."); 
         }
     
-        string accessToken = provider.GenerateAccessToken(oldRefreshToken.Account);
+        var roles = await userManager.GetRolesAsync(oldRefreshToken.Account);
+        
+        string accessToken = provider.GenerateAccessToken(oldRefreshToken.Account, roles);
     
         var newRefreshToken = new RefreshToken
         {

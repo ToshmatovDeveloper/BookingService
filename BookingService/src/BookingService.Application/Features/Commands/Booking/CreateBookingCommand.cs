@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace BookingService.Application.Features.Commands.Booking;
 
-public record CreateBookingCommand(BookingDto BookingDto) : IRequest<BookingDto>;
+public record CreateBookingCommand(BookingDto BookingDto, Guid UserId) : IRequest<BookingDto>;
 
 public class CreateBookingCommandHandler(
     ApplicationDbContext dbContext,
@@ -15,7 +15,8 @@ public class CreateBookingCommandHandler(
 {
     public async Task<BookingDto> Handle(CreateBookingCommand command, CancellationToken cancellationToken)
     {
-        logger.LogInformation("Started creating booking");
+        // ДОБАВЛЕНО: Логируем UserId для удобства отладки
+        logger.LogInformation("Started creating booking for user: {UserId}", command.UserId);
         var dto = command.BookingDto;
 
         var isAvailable = await CheckAvailability(dto.RoomId, dto.StartDate, dto.EndDate, cancellationToken);
@@ -28,7 +29,7 @@ public class CreateBookingCommandHandler(
         BookingStatus status = BookingStatus.Confirmed;
         
         var booking = new Domain.Entities.Booking(
-            dto.HotelId, dto.RoomId, dto.StartDate, dto.EndDate, status);
+            dto.HotelId, dto.RoomId, command.UserId, dto.StartDate, dto.EndDate, status);
         
         try
         {
@@ -79,5 +80,4 @@ public class CreateBookingCommandHandler(
         }
         return true;
     }
-
 }

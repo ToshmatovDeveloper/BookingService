@@ -13,7 +13,7 @@ namespace BookingService.Presenters.Controllers;
 public class HotelController(
     IMediator mediator): ControllerBase
 {
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<IActionResult> CreateHotel(
         CreateHotelCommand command,
@@ -24,6 +24,7 @@ public class HotelController(
         return Ok(result);
     }
     
+    [Authorize]
     [HttpGet("{hotelId:guid}")]
     public async Task<IActionResult> GetHotelById(
         [FromRoute] Guid hotelId,

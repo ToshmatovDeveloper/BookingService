@@ -43,7 +43,8 @@ public class BookingTests(BookingServiceTestWebFactory factory)
                 hotel.Id,
                 room.Id,
                 DateTime.UtcNow.AddDays(4),
-                DateTime.UtcNow.AddDays(6))), cancellationToken);
+                DateTime.UtcNow.AddDays(6)),
+            Guid.NewGuid()), cancellationToken);
 
         //assert
         
@@ -80,9 +81,12 @@ public class BookingTests(BookingServiceTestWebFactory factory)
         
         await dbContext.SaveChangesAsync(cancellationToken);
 
+        var userId = Guid.NewGuid();
+
         var booking = new Booking(
             hotel.Id,
-            room.Id, 
+            room.Id,
+            userId,
             DateTime.UtcNow.AddDays(3),
             DateTime.UtcNow.AddDays(7), 
             BookingStatus.Confirmed);
@@ -102,7 +106,8 @@ public class BookingTests(BookingServiceTestWebFactory factory)
                         hotel.Id,
                         room.Id,
                         DateTime.UtcNow.AddDays(4),
-                        DateTime.UtcNow.AddDays(6))),
+                        DateTime.UtcNow.AddDays(6)),
+                userId),
                 cancellationToken);
         }
         catch (Exception ex)
@@ -149,6 +154,7 @@ public class BookingTests(BookingServiceTestWebFactory factory)
         var booking = new Booking(
             hotel.Id,
             room.Id, 
+            Guid.NewGuid(),
             DateTime.UtcNow.AddDays(3),
             DateTime.UtcNow.AddDays(7), 
             BookingStatus.Confirmed);
@@ -196,9 +202,12 @@ public class BookingTests(BookingServiceTestWebFactory factory)
         
         await dbContext.SaveChangesAsync(cancellationToken);
 
+        var userId = Guid.NewGuid();
+
         var booking = new Booking(
             hotel.Id,
             room.Id, 
+            userId,
             DateTime.UtcNow.AddDays(3),
             DateTime.UtcNow.AddDays(7), 
             BookingStatus.Confirmed);
@@ -210,7 +219,7 @@ public class BookingTests(BookingServiceTestWebFactory factory)
         //act
 
         var getResult = await mediator
-            .Send(new CancelBookingCommand(booking.Id), cancellationToken);
+            .Send(new CancelBookingCommand(booking.Id, userId), cancellationToken);
         
         //assert
 

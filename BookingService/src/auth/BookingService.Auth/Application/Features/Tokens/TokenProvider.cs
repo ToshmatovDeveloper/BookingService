@@ -17,20 +17,27 @@ namespace BookingService.Auth.Application.Features.Tokens;
 
 public class TokenProvider(IOptionsMonitor<JwtSettings> options)
 {
-    public string GenerateAccessToken(Account account)
+    public string GenerateAccessToken(Account account, IList<string> roles)
     {
         string secretKey = options.CurrentValue.Secret;
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
 
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256Signature);
 
+        var claims = new List<Claim>
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, account.Id.ToString()),
+            new Claim(JwtRegisteredClaimNames.Email, account.Email!),
+        };
+
+        foreach (var role in roles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
+
         var tokenDescriptor = new SecurityTokenDescriptor
         {
-            Subject = new ClaimsIdentity(
-            [
-                new Claim(JwtRegisteredClaimNames.Sub, account.Id.ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, account.Email!),
-            ]),
+            Subject = new ClaimsIdentity(claims),
             Expires = DateTime.UtcNow.AddMinutes(options.CurrentValue.ExpirationInMinutes),
             SigningCredentials = credentials,
             Issuer = options.CurrentValue.Issuer,
@@ -49,7 +56,7 @@ public class TokenProvider(IOptionsMonitor<JwtSettings> options)
         return Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
     }
 
-    public string GenerateAccessTokenFromRefreshToken(string refreshToken, string refreshSecretKey)
+    public string GenerateAccessTokenFromRefreshToken(string refreshToken, string refreshSecretKey, IList<string> roles)
     {
         var tokenHandler = new JsonWebTokenHandler();
         var refreshKey = Encoding.UTF8.GetBytes(refreshSecretKey);
@@ -85,6 +92,11 @@ public class TokenProvider(IOptionsMonitor<JwtSettings> options)
             {
                 new Claim(JwtRegisteredClaimNames.Sub, userId),
             };
+
+            foreach (var role in roles)
+            {
+                accessClaims.Add(new Claim(ClaimTypes.Role, role));
+            }
 
             var accessKey = Encoding.UTF8.GetBytes(options.CurrentValue.Secret);
 
@@ -126,5 +138,4 @@ public class TokenProvider(IOptionsMonitor<JwtSettings> options)
             return true;
         }
     }
-
 }

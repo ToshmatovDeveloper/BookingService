@@ -23,6 +23,7 @@ public class RoomController(
         return Ok(result);
     }
     
+    [Authorize]
     [HttpGet("{roomId:guid}")]
     public async Task<IActionResult> GetRoomById(
         [FromRoute] Guid roomId,

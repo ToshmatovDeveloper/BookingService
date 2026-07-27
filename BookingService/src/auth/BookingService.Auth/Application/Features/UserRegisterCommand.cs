@@ -74,18 +74,7 @@ public class UserRegisterCommandHandler(
 
         var roles = await userManager.GetRolesAsync(user);
         
-        List<Claim> claims =
-        [                  
-            new (JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new (JwtRegisteredClaimNames.Email, user.Email!),
-        ];
-        
-        foreach (var userRole in roles)
-        {
-            claims.Add(new Claim(ClaimTypes.Role, userRole));
-        }
-        
-        var accessToken = tokenProvider.GenerateAccessToken(user);
+        var accessToken = tokenProvider.GenerateAccessToken(user, roles);
 
         var refreshToken = new RefreshToken
         {

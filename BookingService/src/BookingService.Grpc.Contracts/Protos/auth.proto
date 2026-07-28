@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option csharp_namespace = "gRPC.Contracts.Client";
+package auth;
+
+message Request{
+  string token = 1;
+}
+
+message Response{
+  bool isAuthentificated = 1;
+  string userId = 2;
+}
+
+service IsAuthenticated  {
+  rpc Check (Request) returns (Response);
+}

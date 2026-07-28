@@ -5,8 +5,10 @@ using BookingService.Auth.Application.Features;
 using BookingService.Auth.Application.Features.Tokens;
 using BookingService.Auth.Application.Validation;
 using BookingService.Auth.Domain.Entities;
+using BookingService.Auth.Grpc.Services;
 using BookingService.Auth.Infrastructure;
 using BookingService.Infrastructure;
+using BookingService.Web;
 using BookingService.Web.Extensions;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +16,10 @@ using Scalar.AspNetCore;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddGrpc(); 
+
+builder.Services.AddAuthGrpcClient("https://localhost:8139");
 
 builder.Host.UseSerilog((context, loggerConfig) =>
     loggerConfig.ReadFrom.Configuration(context.Configuration));
@@ -59,6 +65,8 @@ builder.Services.AddScoped<TokenProvider>();
 builder.Services.AddHostedService<RefreshToKenCleaner>();
 
 var app = builder.Build();
+
+app.MapGrpcService<BookingService.Auth.Grpc.Services.AuthenticationService>(); 
 
 app.UseExceptionHandler();
 app.UseHttpsRedirection();

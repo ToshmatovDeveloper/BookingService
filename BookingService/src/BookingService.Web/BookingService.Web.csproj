@@ -7,6 +7,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\BookingService.Grpc.Contracts\BookingService.Grpc.Contracts.csproj" />
+    </ItemGroup>
+    
+    <ItemGroup>
         <PackageReference Include="EFCore.NamingConventions" Version="10.0.1" />
         <PackageReference Include="FluentValidation" Version="12.1.1" />
         <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />

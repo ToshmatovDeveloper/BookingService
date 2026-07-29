@@ -20,11 +20,7 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddSingleton(sp => 
-{
-    return GrpcChannel.ForAddress("https://localhost:8139"); 
-});
-builder.Services.AddSingleton<AuthGrpcClient>();
+builder.Services.AddMagicOnion();
 
 builder.Host.UseSerilog((context, loggerConfig) =>
     loggerConfig.ReadFrom.Configuration(context.Configuration));
@@ -33,7 +29,6 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 var authServiceConnectionString = builder.Configuration.GetConnectionString("AuthServiceConnection");
 
 builder.Services.AddControllers();
-
 builder.Services.AddCustomOpenApi(); 
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -66,13 +61,10 @@ builder.Services.AddMediatR(cfg =>
 });
 
 builder.Services.AddMemoryCache();
-
 builder.Services.AddScoped<TokenProvider>();
 builder.Services.AddHostedService<RefreshToKenCleaner>();
 
 var app = builder.Build();
-
-app.AddMyCustomAuth();
 
 app.UseExceptionHandler();
 app.UseHttpsRedirection();
@@ -91,6 +83,10 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+app.AddMyCustomAuth();
+
 app.MapControllers();
+
+app.MapMagicOnionService();
 
 app.Run();

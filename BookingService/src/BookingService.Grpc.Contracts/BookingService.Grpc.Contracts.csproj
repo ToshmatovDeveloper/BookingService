@@ -20,6 +20,12 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
+      <PackageReference Include="MagicOnion.Client" Version="7.10.2" />
+    </ItemGroup>
+
+
+    <ItemGroup>
+      <ProjectReference Include="..\auth\BookingService.Auth\BookingService.Auth.csproj" />
     </ItemGroup>
     
 </Project>

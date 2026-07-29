@@ -1,8 +1,7 @@
 ﻿using System.Text;
 using BookingService.Auth.Application.Settings;
-using Grpc.Core;
-using gRPC.Contracts;
-using gRPC.Contracts.Client;
+using MagicOnion;
+using MagicOnion.Server;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
@@ -10,13 +9,15 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace BookingService.Auth.Grpc.Services;
 
+public record Response(bool IsAuthentificated, string UserId);
+
 public class AuthenticationService(
     IOptionsMonitor<JwtSettings> optionsMonitor,
-    ILogger<AuthenticationService> logger) : IsAuthenticated.IsAuthenticatedBase
+    ILogger<AuthenticationService> logger) : ServiceBase<IAuthenticationService>, IAuthenticationService
 {
-    public override async Task<Response> Check(Request request, ServerCallContext context)
+    public async UnaryResult<Response> CheckAsync(string token)
     {
-        logger.LogInformation("gRPC Сервер: Получен запрос Check от клиента {Peer}", context.Peer);
+        logger.LogInformation("gRPC Server: Received request for checking token");
         var secretKey = optionsMonitor.CurrentValue.Secret;
         var key = Encoding.ASCII.GetBytes(secretKey);
         
@@ -28,16 +29,10 @@ public class AuthenticationService(
             ValidateAudience = true,
             ClockSkew = TimeSpan.Zero 
         };
-        
-        var token = request.Token;
 
         if (string.IsNullOrEmpty(token))
         {
-            return new Response
-            {
-                IsAuthentificated = false,
-                UserId = string.Empty
-            };
+            return new Response(false, string.Empty);
         }
 
         var handler = new JsonWebTokenHandler();
@@ -48,21 +43,13 @@ public class AuthenticationService(
             var userId = result.ClaimsIdentity
                 .FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             
-            logger.LogInformation("gRPC Сервер: Токен валиден. Пользователь: {UserId}", userId);
+            logger.LogInformation("gRPC Server: Token is valid. UserId: {UserId}", userId);
             
-            return new Response
-            {
-                IsAuthentificated = true, 
-                UserId = userId ?? string.Empty 
-            };
+            return new Response(true, userId!);
         }
         
-        logger.LogWarning("gRPC Сервер: Токен не прошел валидацию JWT");
+        logger.LogWarning("gRPC Server: JWT validation failed");
         
-        return new Response
-        {
-            IsAuthentificated = false,
-            UserId = string.Empty
-        };
+        return new Response(false, string.Empty);
     }
 }

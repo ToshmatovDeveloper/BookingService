@@ -10,16 +10,21 @@ using BookingService.Auth.Infrastructure;
 using BookingService.Infrastructure;
 using BookingService.Web;
 using BookingService.Web.Extensions;
+using BookingService.Web.Middlewares.Auth;
 using FluentValidation;
+using gRPC.Clients;
+using Grpc.Net.Client;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddGrpc(); 
-
-builder.Services.AddAuthGrpcClient("https://localhost:8139");
+builder.Services.AddSingleton(sp => 
+{
+    return GrpcChannel.ForAddress("https://localhost:8139"); 
+});
+builder.Services.AddSingleton<AuthGrpcClient>();
 
 builder.Host.UseSerilog((context, loggerConfig) =>
     loggerConfig.ReadFrom.Configuration(context.Configuration));
@@ -44,6 +49,7 @@ builder.Services.AddValidatorsFromAssemblies([
 
 builder.Services.AddMyCustomMiddlewares()
     .AddMyCustomConfiguration(builder.Configuration)
+    .AddMyGrpcClients(builder.Configuration)
     .AddProblemDetails();
 
 builder.Services.AddIdentity<Account, Role>()
@@ -66,7 +72,7 @@ builder.Services.AddHostedService<RefreshToKenCleaner>();
 
 var app = builder.Build();
 
-app.MapGrpcService<BookingService.Auth.Grpc.Services.AuthenticationService>(); 
+app.AddMyCustomAuth();
 
 app.UseExceptionHandler();
 app.UseHttpsRedirection();

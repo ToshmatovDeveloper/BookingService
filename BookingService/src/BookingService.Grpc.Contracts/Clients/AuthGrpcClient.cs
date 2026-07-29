@@ -1,32 +1,19 @@
-using Grpc.Core;
 using gRPC.Contracts.Client;
-using Microsoft.Extensions.Logging; 
+using Grpc.Net.Client;
+using MagicOnion;
+using MagicOnion.Client;
+using Response = BookingService.Auth.Grpc.Services.Response;
 
 namespace gRPC.Clients;
 
-public class AuthGrpcClient(
-    IsAuthenticated.IsAuthenticatedClient client,
-    ILogger<AuthGrpcClient> logger) 
+public class AuthGrpcClient
 {
-    public async Task<(bool IsAuthenticated, string? UserId)> CheckTokenAsync(string token, CancellationToken cancellationToken = default)
+    public async UnaryResult<Response> CheckAsync(string token)
     {
-        var request = new Request { Token = token };
+        using var channel = GrpcChannel.ForAddress("https://localhost:8139");
         
-        logger.LogInformation("gRPC Клиент: Отправка токена на проверку. Длина токена: {Length}", token?.Length);
-
-        try
-        {
-            var response = await client.CheckAsync(request, cancellationToken: cancellationToken);
-            
-            logger.LogInformation("gRPC Клиент: Получен ответ. Статус: {Status}, UserId: {UserId}", 
-                response.IsAuthentificated, response.UserId);
-            
-            return (response.IsAuthentificated, response.UserId);
-        }
-        catch (RpcException ex)
-        {
-            logger.LogError(ex, "gRPC Клиент: Ошибка вызова gRPC сервера Auth. Статус-код: {Code}", ex.StatusCode);
-            return (false, null);
-        }
+        var client = MagicOnionClient.Create<BookingService.Auth.Grpc.Services.IAuthenticationService>(channel);
+        
+        return await client.CheckAsync(token);
     }
 }

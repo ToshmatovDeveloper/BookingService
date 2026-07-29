@@ -9,6 +9,7 @@
     <ItemGroup>
       <PackageReference Include="FluentValidation" Version="12.1.1" />
       <PackageReference Include="Grpc.AspNetCore" Version="2.80.0" />
+      <PackageReference Include="MagicOnion.Server" Version="7.10.2" />
       <PackageReference Include="MediatR" Version="14.2.0" />
       <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.9" />
       <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.3.11" />
@@ -20,10 +21,6 @@
 
     <ItemGroup>
       <Folder Include="Presenters\" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\..\BookingService.Grpc.Contracts\BookingService.Grpc.Contracts.csproj" />
     </ItemGroup>
 
 </Project>

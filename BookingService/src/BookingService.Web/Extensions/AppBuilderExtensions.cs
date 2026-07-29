@@ -1,7 +1,10 @@
-﻿using AuthService.Web.Middlewares;
-using BookingService.Application.Settings.Cache;
+﻿using BookingService.Application.Settings.Cache;
 using BookingService.Auth.Application.Settings;
 using BookingService.Web.Middlewares;
+using BookingService.Web.Middlewares.Auth;
+using BookingService.Web.Middlewares.Exception;
+using gRPC.Clients;
+using Grpc.Net.Client;
 
 namespace BookingService.Web.Extensions;
 
@@ -15,6 +18,7 @@ public static class AppBuilderExtensions
         services.AddExceptionHandler<FailedAddUserRoleExceptionHandler>();
         services.AddExceptionHandler<UserCreateFailedExceptionHandler>();
         services.AddExceptionHandler<GlobalExceptionHandler>();
+        
         
         return services;
     }
@@ -37,5 +41,25 @@ public static class AppBuilderExtensions
             configuration.GetSection("CacheSettings"));
 
         return services;
+    }
+    public static IServiceCollection AddMyGrpcClients(this IServiceCollection services, IConfiguration configuration)
+    {
+        var authServiceUrl = configuration["GrpcSettings:AuthServiceUrl"];
+
+        if (string.IsNullOrEmpty(authServiceUrl))
+        {
+            throw new InvalidOperationException("gRPC AuthServiceUrl is not configured in appsettings.json");
+        }
+
+        services.AddSingleton(sp => GrpcChannel.ForAddress(authServiceUrl));
+
+        services.AddSingleton<AuthGrpcClient>();
+
+        return services;
+    }
+    
+    public static IApplicationBuilder AddMyCustomAuth(this IApplicationBuilder app)
+    {
+        return app.UseMiddleware<CustomAuthMiddleware>();
     }
 }

@@ -27,6 +27,7 @@ builder.Host.UseSerilog((context, loggerConfig) =>
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 var authServiceConnectionString = builder.Configuration.GetConnectionString("AuthServiceConnection");
+var gRpcConnectionString = builder.Configuration["GrpcSettings:AuthServiceUrl"];
 
 builder.Services.AddControllers();
 builder.Services.AddCustomOpenApi(); 
@@ -44,7 +45,7 @@ builder.Services.AddValidatorsFromAssemblies([
 
 builder.Services.AddMyCustomMiddlewares()
     .AddMyCustomConfiguration(builder.Configuration)
-    .AddMyGrpcClients(builder.Configuration)
+    .AddAuthGrpcClient(gRpcConnectionString!)
     .AddProblemDetails();
 
 builder.Services.AddIdentity<Account, Role>()

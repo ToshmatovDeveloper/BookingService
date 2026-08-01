@@ -28,7 +28,6 @@ public static class OpenApiExtensions
 
             options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, securityScheme);
 
-            // Используем явное создание List<string>() вместо Array.Empty<string>()
             options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
             {
                 [new OpenApiSecuritySchemeReference(JwtBearerDefaults.AuthenticationScheme, document)] = new List<string>()

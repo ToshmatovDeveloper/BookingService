@@ -7,10 +7,6 @@
         <RootNamespace>gRPC</RootNamespace>
     </PropertyGroup>
 
-    <ItemGroup>
-        <Protobuf Include="Protos/auth.proto" GrpcServices="Both" />
-    </ItemGroup>
-
 
     <ItemGroup>
       <PackageReference Include="Google.Protobuf" Version="3.35.1" />

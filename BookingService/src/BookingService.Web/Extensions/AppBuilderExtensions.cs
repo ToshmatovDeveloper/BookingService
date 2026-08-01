@@ -1,10 +1,9 @@
 ﻿using BookingService.Application.Settings.Cache;
 using BookingService.Auth.Application.Settings;
-using BookingService.Web.Middlewares;
+
 using BookingService.Web.Middlewares.Auth;
 using BookingService.Web.Middlewares.Exception;
 using gRPC.Clients;
-using Grpc.Net.Client;
 
 namespace BookingService.Web.Extensions;
 
@@ -19,41 +18,16 @@ public static class AppBuilderExtensions
         services.AddExceptionHandler<UserCreateFailedExceptionHandler>();
         services.AddExceptionHandler<GlobalExceptionHandler>();
         
-        
         return services;
     }
     
     public static IServiceCollection AddMyCustomConfiguration(this IServiceCollection services, IConfiguration configuration)
     {
-        services.Configure<PasswordSettings>(
-            configuration.GetSection("PasswordSettings"));
-
-        services.Configure<LockoutSettings>(
-            configuration.GetSection("LockoutSettings"));
-
-        services.Configure<UserSettings>(
-            configuration.GetSection("UserSettings"));
-
-        services.Configure<JwtSettings>(
-            configuration.GetSection("JwtSettings"));
-
-        services.Configure<CacheSettings>(
-            configuration.GetSection("CacheSettings"));
-
-        return services;
-    }
-    public static IServiceCollection AddMyGrpcClients(this IServiceCollection services, IConfiguration configuration)
-    {
-        var authServiceUrl = configuration["GrpcSettings:AuthServiceUrl"];
-
-        if (string.IsNullOrEmpty(authServiceUrl))
-        {
-            throw new InvalidOperationException("gRPC AuthServiceUrl is not configured in appsettings.json");
-        }
-
-        services.AddSingleton(sp => GrpcChannel.ForAddress(authServiceUrl));
-
-        services.AddSingleton<AuthGrpcClient>();
+        services.Configure<PasswordSettings>(configuration.GetSection("PasswordSettings"));
+        services.Configure<LockoutSettings>(configuration.GetSection("LockoutSettings"));
+        services.Configure<UserSettings>(configuration.GetSection("UserSettings"));
+        services.Configure<JwtSettings>(configuration.GetSection("JwtSettings"));
+        services.Configure<CacheSettings>(configuration.GetSection("CacheSettings"));
 
         return services;
     }
@@ -61,5 +35,15 @@ public static class AppBuilderExtensions
     public static IApplicationBuilder AddMyCustomAuth(this IApplicationBuilder app)
     {
         return app.UseMiddleware<CustomAuthMiddleware>();
+    }
+    
+    public static IServiceCollection AddAuthGrpcClient(this IServiceCollection services, string serverUrl)
+    {
+        services.AddGrpcClient<AuthGrpcClient>(options => 
+        { 
+            options.Address = new Uri(serverUrl); 
+        });
+
+        return services;
     }
 }

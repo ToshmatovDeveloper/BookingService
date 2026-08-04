@@ -1,6 +1,18 @@
-version: '3.8'
-
 services:
+  gateway.api:
+    container_name: gateway_api
+    restart: always
+    build:
+      context: .
+      dockerfile: src/BookingService.Web/Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5000
+    networks:
+      - booking-network
+  
   booking-postgres:
     container_name: booking_postgres
     image: postgres:17
@@ -22,7 +34,7 @@ services:
     restart: always
     environment:
       - ACCEPT_EULA=Y
-      - SEQ_FIRSTRUN_NOAUTHENTICATION=true 
+      - SEQ_FIRSTRUN_NOAUTHENTICATION=true
     ports:
       - "5341:80"
     volumes:
@@ -32,7 +44,6 @@ services:
 
 volumes:
   booking-postgres-data:
-  auth-postgres-data:
   seq-data:
 
 networks:

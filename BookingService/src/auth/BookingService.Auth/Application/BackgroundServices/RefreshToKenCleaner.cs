@@ -14,26 +14,37 @@ public class RefreshToKenCleaner(
     {
         using var timer = new PeriodicTimer(TimeSpan.FromDays(1));
 
-        while (!stoppingToken.IsCancellationRequested && 
-               await timer.WaitForNextTickAsync(stoppingToken))
+        try
         {
-            try
+            while (!stoppingToken.IsCancellationRequested && 
+                   await timer.WaitForNextTickAsync(stoppingToken))
             {
-                logger.LogInformation("Starting background token cleaning.");
+                try
+                {
+                    logger.LogInformation("Starting background token cleaning.");
 
-                using var scope = scopeFactory.CreateScope();
-                
-                var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-                
-                var deletedCount = await mediator
-                    .Send(new TokenProvider.CleanOldTokensCommand(), stoppingToken);
+                    using var scope = scopeFactory.CreateScope();
+                    
+                    var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+                    
+                    var deletedCount = await mediator
+                        .Send(new TokenProvider.CleanOldTokensCommand(), stoppingToken);
 
-                logger.LogInformation("Token cleanup completed.");
+                    logger.LogInformation("Token cleanup completed.");
+                }
+                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Error occurred during token cleanup command execution.");
+                }
             }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Error occurred during token cleanup command execution.");
-            }
+        }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+            logger.LogInformation("Background token cleaning was canceled.");
         }
     }
 }

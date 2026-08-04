@@ -32,6 +32,9 @@ var gRpcConnectionString = builder.Configuration["GrpcSettings:AuthServiceUrl"];
 builder.Services.AddControllers();
 builder.Services.AddCustomOpenApi(); 
 
+builder.Services.AddReverseProxy()
+    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 
@@ -45,8 +48,9 @@ builder.Services.AddValidatorsFromAssemblies([
 
 builder.Services.AddMyCustomMiddlewares()
     .AddMyCustomConfiguration(builder.Configuration)
-    .AddAuthGrpcClient(gRpcConnectionString!)
     .AddProblemDetails();
+
+builder.Services.AddTransient<AuthGrpcClient>();
 
 builder.Services.AddIdentity<Account, Role>()
     .AddEntityFrameworkStores<AuthDbContext>();
@@ -70,6 +74,9 @@ var app = builder.Build();
 app.UseExceptionHandler();
 app.UseHttpsRedirection();
 app.UseSerilogRequestLogging();
+app.MapReverseProxy();
+
+app.AddMyCustomAuth(); 
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -84,10 +91,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.AddMyCustomAuth();
-
 app.MapControllers();
-
 app.MapMagicOnionService();
 
 app.Run();

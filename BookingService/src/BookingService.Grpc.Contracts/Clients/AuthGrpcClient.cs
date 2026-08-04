@@ -1,17 +1,21 @@
 using Grpc.Net.Client;
-using MagicOnion;
 using MagicOnion.Client;
+using Microsoft.Extensions.Configuration;
 using Response = BookingService.Auth.Grpc.Services.Response;
 
 namespace gRPC.Clients;
 
-public class AuthGrpcClient
+public class AuthGrpcClient(IConfiguration configuration)
 {
-    public async UnaryResult<Response> CheckAsync(string token)
+    private readonly Lazy<GrpcChannel> _channel = new(() => 
     {
-        using var channel = GrpcChannel.ForAddress("https://localhost:8139");
-        
-        var client = MagicOnionClient.Create<BookingService.Auth.Grpc.Services.IAuthenticationService>(channel);
+        var address = configuration["GrpcSettings:AuthServiceUrl"] ?? "https://localhost:8139";
+        return GrpcChannel.ForAddress(address);
+    });
+
+    public async Task<Response> CheckAsync(string token, CancellationToken cancellationToken = default)
+    {
+        var client = MagicOnionClient.Create<BookingService.Auth.Grpc.Services.IAuthenticationService>(_channel.Value);
         
         return await client.CheckAsync(token);
     }

@@ -5,17 +5,12 @@ using BookingService.Auth.Application.Features;
 using BookingService.Auth.Application.Features.Tokens;
 using BookingService.Auth.Application.Validation;
 using BookingService.Auth.Domain.Entities;
-using BookingService.Auth.Grpc.Services;
 using BookingService.Auth.Infrastructure;
 using BookingService.Infrastructure;
-using BookingService.Web;
 using BookingService.Web.Extensions;
-using BookingService.Web.Middlewares.Auth;
 using FluentValidation;
 using gRPC.Clients;
-using Grpc.Net.Client;
 using Microsoft.EntityFrameworkCore;
-using Scalar.AspNetCore;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,7 +22,7 @@ builder.Host.UseSerilog((context, loggerConfig) =>
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 var authServiceConnectionString = builder.Configuration.GetConnectionString("AuthServiceConnection");
-var gRpcConnectionString = builder.Configuration["GrpcSettings:AuthServiceUrl"];
+var authServiceUrl = builder.Configuration["GrpcSettings:AuthServiceUrl"] ?? "https://localhost:8139";
 
 builder.Services.AddControllers();
 builder.Services.AddCustomOpenApi(); 
@@ -50,7 +45,7 @@ builder.Services.AddMyCustomMiddlewares()
     .AddMyCustomConfiguration(builder.Configuration)
     .AddProblemDetails();
 
-builder.Services.AddTransient<AuthGrpcClient>();
+builder.Services.AddAuthGrpcClient(authServiceUrl);
 
 builder.Services.AddIdentity<Account, Role>()
     .AddEntityFrameworkStores<AuthDbContext>();

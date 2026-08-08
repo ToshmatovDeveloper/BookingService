@@ -1,3 +1,4 @@
+using System.Threading.RateLimiting;
 using BookingService.Application.Features.Commands.Hotel;
 using BookingService.Application.Validation;
 using BookingService.Auth.Application.BackgroundServices;
@@ -9,7 +10,8 @@ using BookingService.Auth.Infrastructure;
 using BookingService.Infrastructure;
 using BookingService.Web.Extensions;
 using FluentValidation;
-using gRPC.Clients;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -26,7 +28,7 @@ var authServiceUrl = builder.Configuration["GrpcSettings:AuthServiceUrl"] ?? "ht
 
 builder.Services.AddControllers();
 builder.Services.AddCustomOpenApi(); 
-
+ 
 builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 
@@ -52,6 +54,81 @@ builder.Services.AddIdentity<Account, Role>()
 
 builder.Services.AddCustomAuth(builder.Configuration);
 
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+
+        double retrySeconds = 60; 
+        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+        {
+            retrySeconds = retryAfter.TotalSeconds;
+            context.HttpContext.Response.Headers.RetryAfter = retrySeconds.ToString();
+        }
+
+        var problemDetailsFactory = context.HttpContext
+            .RequestServices.GetRequiredService<ProblemDetailsFactory>();
+
+        var problemDetails = problemDetailsFactory.CreateProblemDetails(
+            context.HttpContext,
+            statusCode: StatusCodes.Status429TooManyRequests,
+            title: "Too Many Requests",
+            detail: $"You have exceeded the rate limit. Please try again after {retrySeconds} seconds."
+        );
+
+        context.HttpContext.Response.ContentType = "application/json";
+        await context.HttpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken: cancellationToken);
+    };
+    
+    options.AddFixedWindowLimiter("fixed", cfg =>
+    {
+        cfg.PermitLimit = 5;
+        cfg.Window = TimeSpan.FromMinutes(1);
+    });
+
+    options.AddPolicy("per-user", httpContext =>
+    {
+        string? userId = httpContext.User?.FindFirst("sub")?.Value;
+
+        if (!string.IsNullOrWhiteSpace(userId))
+        {
+            return RateLimitPartition.GetTokenBucketLimiter(
+                userId,
+                _ => new TokenBucketRateLimiterOptions
+                {
+                    TokenLimit = 5,
+                    TokensPerPeriod = 2,
+                    ReplenishmentPeriod = TimeSpan.FromMinutes(1),
+                });
+        }
+        
+        return RateLimitPartition.GetFixedWindowLimiter(
+            "anonymous",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1)
+            });
+    });
+
+    options.AddPolicy("auth-limit", httpContext =>
+    {
+        var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+            ipAddress,
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            });
+    });
+});
+
 builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssembly(typeof(CreateHotelCommand).Assembly);
@@ -75,6 +152,7 @@ app.AddMyCustomAuth();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 if (app.Environment.IsDevelopment())
 {

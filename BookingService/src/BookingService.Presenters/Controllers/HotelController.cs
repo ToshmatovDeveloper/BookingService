@@ -5,6 +5,7 @@ using CSharpFunctionalExtensions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace BookingService.Presenters.Controllers;
 
@@ -14,6 +15,7 @@ public class HotelController(
     IMediator mediator): ControllerBase
 {
     [Authorize]
+    [EnableRateLimiting("fixed")]
     [HttpPost]
     public async Task<IActionResult> CreateHotel(
         CreateHotelCommand command,
@@ -25,6 +27,7 @@ public class HotelController(
     }
     
     [Authorize]
+    [EnableRateLimiting("per-user")]
     [HttpGet("{hotelId:guid}")]
     public async Task<IActionResult> GetHotelById(
         [FromRoute] Guid hotelId,
@@ -38,6 +41,7 @@ public class HotelController(
     }
     
     [Authorize(Roles = "Admin")]
+    [EnableRateLimiting("fixed")]
     [HttpDelete("{hotelId:guid}")]
     public async Task<IActionResult> DeleteHotel(
         [FromRoute] Guid hotelId,

@@ -4,6 +4,7 @@ using BookingService.Auth.Application.Settings;
 using BookingService.Web.Middlewares.Auth;
 using BookingService.Web.Middlewares.Exception;
 using gRPC.Clients;
+using Grpc.Net.Client;
 
 namespace BookingService.Web.Extensions;
 
@@ -39,10 +40,11 @@ public static class AppBuilderExtensions
     
     public static IServiceCollection AddAuthGrpcClient(this IServiceCollection services, string serverUrl)
     {
-        services.AddGrpcClient<AuthGrpcClient>(options => 
-        { 
-            options.Address = new Uri(serverUrl); 
-        });
+        services.AddSingleton(GrpcChannel.ForAddress(serverUrl, new GrpcChannelOptions
+        {
+        }));
+
+        services.AddScoped<gRPC.Clients.AuthGrpcClient>();
 
         return services;
     }

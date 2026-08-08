@@ -4,6 +4,7 @@ using BookingService.Domain.DTOs;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace BookingService.Presenters.Controllers;
 
@@ -13,6 +14,7 @@ public class RoomController(
     IMediator mediator): ControllerBase
 {
     [Authorize(Roles = "Admin")]
+    [EnableRateLimiting("fixed")]
     [HttpPost]
     public async Task<IActionResult> CreateRoom(
         CreateRoomCommand command,
@@ -24,6 +26,7 @@ public class RoomController(
     }
     
     [Authorize]
+    [EnableRateLimiting("per-user")]
     [HttpGet("{roomId:guid}")]
     public async Task<IActionResult> GetRoomById(
         [FromRoute] Guid roomId,
@@ -37,6 +40,7 @@ public class RoomController(
     }
     
     [Authorize(Roles = "Admin")]
+    [EnableRateLimiting("fixed")]
     [HttpDelete("{roomId:guid}")]
     public async Task<IActionResult> DeleteRoom(
         [FromRoute] Guid roomId,

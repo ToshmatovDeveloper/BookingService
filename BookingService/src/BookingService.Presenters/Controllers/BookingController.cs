@@ -5,6 +5,7 @@ using BookingService.Domain.DTOs;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.JsonWebTokens;
 
 namespace BookingService.Presenters.Controllers;
@@ -15,6 +16,7 @@ public class BookingController(
     IMediator mediator): ControllerBase
 {
     [Authorize]
+    [EnableRateLimiting("fixed")]
     [HttpPost]
     public async Task<IActionResult> CreateBooking(
         CreateBookingCommand command,
@@ -26,6 +28,7 @@ public class BookingController(
     }
     
     [Authorize]
+    [EnableRateLimiting("per-user")]
     [HttpGet("{bookingId:guid}")]
     public async Task<IActionResult> GetBookingById(
         [FromRoute] Guid bookingId,
@@ -39,6 +42,7 @@ public class BookingController(
     }
 
     [Authorize]
+    [EnableRateLimiting("fixed")]
     [HttpPatch("{bookingId:guid}/cancel")]
     public async Task<IActionResult> CancelBooking(
         [FromRoute] Guid bookingId,

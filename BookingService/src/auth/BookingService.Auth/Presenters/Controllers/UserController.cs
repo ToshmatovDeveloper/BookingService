@@ -2,6 +2,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace BookingService.Auth.Presenters.Controllers;
 
@@ -11,6 +12,7 @@ public class UserController(
     IMediator mediator) : ControllerBase
 {
     [AllowAnonymous]
+    [EnableRateLimiting("auth-limit")] 
     [HttpPost("register")]
     public async Task<IActionResult> RegisterUser(
         UserRegisterCommand command,
@@ -22,6 +24,7 @@ public class UserController(
     }
     
     [AllowAnonymous]
+    [EnableRateLimiting("auth-limit")] 
     [HttpPost("login")]
     public async Task<IActionResult> UserLogin(UserLoginCommand command, CancellationToken ct)
     {
@@ -30,6 +33,7 @@ public class UserController(
     }
     
     [AllowAnonymous]
+    [EnableRateLimiting("auth-limit")] 
     [HttpPost("refresh")]
     public async Task<IActionResult> UserLoginWithRefreshToken(RefreshTokenCommand command, CancellationToken ct)
     {

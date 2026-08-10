@@ -1,8 +1,6 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using BookingService.Auth.Application.Interfaces;
 using BookingService.Auth.Application.Settings;
 using BookingService.Auth.Domain.Entities;
 using BookingService.Auth.Infrastructure;

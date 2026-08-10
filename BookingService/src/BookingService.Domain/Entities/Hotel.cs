@@ -1,8 +1,9 @@
 ﻿using BookingService.Domain.Enum;
+using BookingService.Domain.Interfaces;
 
 namespace BookingService.Domain.Entities;
 
-public class Hotel
+public class Hotel : IAuditableEntity
 {
     public Hotel() { }
     
@@ -25,4 +26,8 @@ public class Hotel
     public HotelStarRating StarRating { get; init; }
     
     public IEnumerable<Room>? RoomIds { get; init; } 
+
+    public DateTime CreatedAt { get; set; }
+    
+    public DateTime ModifiedAt { get; set; }
 }

@@ -8,6 +8,7 @@ using BookingService.Auth.Application.Validation;
 using BookingService.Auth.Domain.Entities;
 using BookingService.Auth.Infrastructure;
 using BookingService.Infrastructure;
+using BookingService.Infrastructure.Interceptors;
 using BookingService.Web.Extensions;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
@@ -32,15 +33,23 @@ builder.Services.AddCustomOpenApi();
 builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(connectionString));
+builder.Services.AddSingleton<UpdateAuditableEntitiesInterceptor>();
+
+builder.Services.AddDbContext<ApplicationDbContext>(
+    (sp, options) =>
+    {
+        var auditableInterceptor = sp.GetRequiredService<UpdateAuditableEntitiesInterceptor>();
+        
+        options.UseNpgsql(connectionString)
+            .AddInterceptors(auditableInterceptor);
+    });
 
 builder.Services.AddDbContext<AuthDbContext>(options =>
     options.UseNpgsql(authServiceConnectionString));
 
 builder.Services.AddValidatorsFromAssemblies([
     typeof(CreateHotelRequestValidator).Assembly,
-    typeof(PasswordValidator).Assembly
+    typeof(PasswordValidator).Assembly 
 ]);
 
 builder.Services.AddMyCustomMiddlewares()

@@ -1,19 +1,21 @@
-﻿using BookingService.Application.CustomExceptions;
+﻿using System.Text.Json.Serialization;
+using BookingService.Application.CustomExceptions;
 using BookingService.Application.Settings.Cache;
 using BookingService.Domain.DTOs;
 using BookingService.Infrastructure;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 
 namespace BookingService.Application.Features.Queries.Booking;
 
 public record GetBookingByIdQuery(Guid Id) : IRequest<BookingDto>;
 
 public class GetBookingByIdQueryHandler(
-    IMemoryCache cache,
+    IDistributedCache cache,
     IOptionsMonitor<CacheSettings> options,
     ApplicationDbContext dbContext,
     ILogger<GetBookingByIdQueryHandler> logger) 
@@ -25,7 +27,13 @@ public class GetBookingByIdQueryHandler(
     {
         logger.LogInformation($"Started reading booking by id : {query.Id}.");
 
-        if (!cache.TryGetValue(query.Id, out Domain.Entities.Booking? booking))
+        string key = $"booking-{query.Id}";
+        
+        string? cachedBooking = await cache.GetStringAsync(key, cancellationToken);
+        
+        Domain.Entities.Booking? booking;
+        
+        if (string.IsNullOrEmpty(cachedBooking))
         {
             booking = await dbContext.Bookings
                 .Where(x => x.Id == query.Id)
@@ -38,16 +46,25 @@ public class GetBookingByIdQueryHandler(
             }
 
             logger.LogInformation($"Booking with id : {query.Id} found from db.");
-
-            cache.Set(
-                query.Id,
-                booking, options.CurrentValue.TimeToLive);
+            
+            await cache.SetStringAsync(
+                key, 
+                JsonConvert.SerializeObject(booking), 
+                new DistributedCacheEntryOptions 
+                    { AbsoluteExpirationRelativeToNow = options.CurrentValue.TimeToLive }, 
+                cancellationToken);
+            
+            return new BookingDto(
+                booking.HotelId,
+                booking.RoomId,
+                booking.StartDate,
+                booking.EndDate);
         }
-        else
-        {
-            logger.LogInformation($"Booking with id : {query.Id} found from cache.");
-        }
+       
+        logger.LogInformation($"Booking with id : {query.Id} found from cache.");
     
+        booking = JsonConvert.DeserializeObject<Domain.Entities.Booking>(cachedBooking);
+        
         return new BookingDto(
             booking!.HotelId,
             booking.RoomId,

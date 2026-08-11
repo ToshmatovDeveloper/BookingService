@@ -15,6 +15,7 @@
       <PackageReference Include="CSharpFunctionalExtensions" Version="3.7.0" />
       <PackageReference Include="FluentValidation" Version="12.1.1" />
       <PackageReference Include="MediatR" Version="14.1.0" />
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     </ItemGroup>
 
     <ItemGroup>

@@ -4,12 +4,19 @@ services:
     restart: always
     build:
       context: .
-      dockerfile: src/BookingService.Web/Dockerfile
+      dockerfile: Dockerfile
     ports:
       - "5000:5000"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:5000
+      - ConnectionStrings__Redis=redis:6379
+      - ConnectionStrings__DefaultConnection=Host=booking_postgres;Port=5432;Database=booking_service_db;Username=postgres;Password=postgres
+      - ConnectionStrings__AuthConnection=Host=auth_postgres;Port=5432;Database=auth_db;Username=postgres;Password=postgres
+    depends_on:
+      - booking-postgres
+      - auth_postgres
+      - redis
     networks:
       - booking-network
   
@@ -25,6 +32,32 @@ services:
       - "5434:5432"
     volumes:
       - booking-postgres-data:/var/lib/postgresql/data
+    networks:
+      - booking-network
+
+  auth_postgres:
+    container_name: auth_postgres
+    image: postgres:17
+    restart: always
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5436:5432"
+    volumes:
+      - auth-postgres-data:/var/lib/postgresql/data
+    networks:
+      - booking-network
+
+  redis:
+    container_name: redis_cache
+    image: redis:alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
     networks:
       - booking-network
 
@@ -44,7 +77,9 @@ services:
 
 volumes:
   booking-postgres-data:
+  auth-postgres-data:
   seq-data:
+  redis-data:
 
 networks:
   booking-network:

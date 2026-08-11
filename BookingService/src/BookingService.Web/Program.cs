@@ -35,6 +35,11 @@ builder.Services.AddReverseProxy()
 
 builder.Services.AddSingleton<UpdateAuditableEntitiesInterceptor>();
 
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("Redis");
+});
+
 builder.Services.AddDbContext<ApplicationDbContext>(
     (sp, options) =>
     {

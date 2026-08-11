@@ -9,7 +9,7 @@ public class UpdateAuditableEntitiesInterceptor : SaveChangesInterceptor
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData, 
         InterceptionResult<int> result,
-        CancellationToken cancellationToken = new CancellationToken())
+        CancellationToken cancellationToken = new ())
     {
         var dbContext = eventData.Context;
 

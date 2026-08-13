@@ -9,8 +9,13 @@ using BookingService.Auth.Domain.Entities;
 using BookingService.Auth.Infrastructure;
 using BookingService.Infrastructure;
 using BookingService.Infrastructure.Interceptors;
+using BookingService.Notification.Application.Features;
+using BookingService.Notification.Application.Settings;
+using BookingService.Notification.Application.Validation;
+using BookingService.Notification.Infrastructure;
 using BookingService.Web.Extensions;
 using FluentValidation;
+using MassTransit;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +30,7 @@ builder.Host.UseSerilog((context, loggerConfig) =>
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 var authServiceConnectionString = builder.Configuration.GetConnectionString("AuthServiceConnection");
+var notificationConnectionString = builder.Configuration.GetConnectionString("NotificationConnection"); 
 var authServiceUrl = builder.Configuration["GrpcSettings:AuthServiceUrl"] ?? "https://localhost:8139";
 
 builder.Services.AddControllers();
@@ -32,6 +38,29 @@ builder.Services.AddCustomOpenApi();
  
 builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
+
+builder.Services.Configure<SmtpSettings>(
+    builder.Configuration.GetSection(SmtpSettings.SectionName));
+
+builder.Services.AddMassTransit(x =>
+{
+    x.AddConsumer<BookingCreatedConsumer>();
+
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        cfg.Host(builder.Configuration["RabbitMQ:Host"] ?? "localhost", "/", h =>
+        {
+            h.Username(builder.Configuration["RabbitMQ:Username"] ?? "guest");
+            h.Password(builder.Configuration["RabbitMQ:Password"] ?? "guest");
+        });
+
+        cfg.UseMessageRetry(r => r.Intervals(TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(4), TimeSpan.FromSeconds(8), TimeSpan.FromSeconds(16), TimeSpan.FromSeconds(32)));
+
+        cfg.UseInMemoryOutbox();
+
+        cfg.ConfigureEndpoints(context);
+    });
+});
 
 builder.Services.AddSingleton<UpdateAuditableEntitiesInterceptor>();
 
@@ -52,9 +81,15 @@ builder.Services.AddDbContext<ApplicationDbContext>(
 builder.Services.AddDbContext<AuthDbContext>(options =>
     options.UseNpgsql(authServiceConnectionString));
 
+builder.Services.AddDbContext<NotificationDbContext>(options =>
+{
+    options.UseNpgsql(notificationConnectionString);
+});
+
 builder.Services.AddValidatorsFromAssemblies([
     typeof(CreateHotelRequestValidator).Assembly,
-    typeof(PasswordValidator).Assembly 
+    typeof(PasswordValidator).Assembly,
+    typeof(SendMailCommandValidator).Assembly 
 ]);
 
 builder.Services.AddMyCustomMiddlewares()
@@ -147,6 +182,7 @@ builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssembly(typeof(CreateHotelCommand).Assembly);
     cfg.RegisterServicesFromAssembly(typeof(UserRegisterCommand).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(SendMailCommand).Assembly);
 
     cfg.AddOpenBehavior(typeof(BookingService.Application.Validation.ValidationBehavior<,>));
 });

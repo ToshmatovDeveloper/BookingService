@@ -40,7 +40,7 @@ public class HotelController(
         return Ok(hotel);
     }
     
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     [EnableRateLimiting("fixed")]
     [HttpDelete("{hotelId:guid}")]
     public async Task<IActionResult> DeleteHotel(

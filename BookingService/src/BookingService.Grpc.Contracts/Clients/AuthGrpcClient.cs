@@ -13,4 +13,10 @@ public class AuthGrpcClient(GrpcChannel channel)
     {
         return await _client.CheckAsync(token);
     }
+    
+    public async Task<UserResponse> GetUserByIdAsync(Guid userId)
+        {
+            var response = await _client.GetUserByIdAsync(userId);
+            return response; 
+        }
 }

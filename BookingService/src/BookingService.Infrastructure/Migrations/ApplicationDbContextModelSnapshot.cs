@@ -17,7 +17,7 @@ namespace BookingService.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.9")
+                .HasAnnotation("ProductVersion", "10.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -46,9 +46,8 @@ namespace BookingService.Infrastructure.Migrations
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -118,9 +117,8 @@ namespace BookingService.Infrastructure.Migrations
                     b.Property<long>("RoomNumber")
                         .HasColumnType("bigint");
 
-                    b.Property<string>("RoomType")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("RoomType")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 

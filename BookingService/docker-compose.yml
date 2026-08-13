@@ -1,6 +1,7 @@
 services:
-  gateway.api:
+  gateway-api:
     container_name: gateway_api
+    image: bookingservice-gateway-api
     restart: always
     build:
       context: .
@@ -13,13 +14,17 @@ services:
       - ConnectionStrings__Redis=redis:6379
       - ConnectionStrings__DefaultConnection=Host=booking_postgres;Port=5432;Database=booking_service_db;Username=postgres;Password=postgres
       - ConnectionStrings__AuthConnection=Host=auth_postgres;Port=5432;Database=auth_db;Username=postgres;Password=postgres
+      - ConnectionStrings__NotificationConnection=Host=notification_postgres;Port=5432;Database=notification_db;Username=postgres;Password=postgres
+      - SmtpSettings__Host=mailpit
     depends_on:
       - booking-postgres
       - auth_postgres
+      - notification-postgres
+      - mailpit
       - redis
     networks:
       - booking-network
-  
+
   booking-postgres:
     container_name: booking_postgres
     image: postgres:17
@@ -47,6 +52,31 @@ services:
       - "5436:5432"
     volumes:
       - auth-postgres-data:/var/lib/postgresql/data
+    networks:
+      - booking-network
+
+  notification-postgres:
+    container_name: notification_postgres
+    image: postgres:17
+    restart: always
+    environment:
+      POSTGRES_DB: notification_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5437:5432"
+    volumes:
+      - notification-postgres-data:/var/lib/postgresql/data
+    networks:
+      - booking-network
+
+  mailpit:
+    container_name: mailpit
+    image: axllent/mailpit:latest
+    restart: always
+    ports:
+      - "1025:1025"
+      - "8025:8025"
     networks:
       - booking-network
 
@@ -78,6 +108,7 @@ services:
 volumes:
   booking-postgres-data:
   auth-postgres-data:
+  notification-postgres-data:
   seq-data:
   redis-data:
 

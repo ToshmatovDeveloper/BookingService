@@ -7,14 +7,17 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\BookingService.Contracts\BookingService.Contracts.csproj" />
       <ProjectReference Include="..\BookingService.Domain\BookingService.Domain.csproj" />
+      <ProjectReference Include="..\BookingService.Grpc.Contracts\BookingService.Grpc.Contracts.csproj" />
       <ProjectReference Include="..\BookingService.Infrastructure\BookingService.Infrastructure.csproj" />
     </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="CSharpFunctionalExtensions" Version="3.7.0" />
       <PackageReference Include="FluentValidation" Version="12.1.1" />
-      <PackageReference Include="MediatR" Version="14.1.0" />
+        <PackageReference Include="MassTransit" Version="8.3.6" />
+      <PackageReference Include="MediatR" Version="14.2.0" />
       <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     </ItemGroup>
 

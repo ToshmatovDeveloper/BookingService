@@ -68,7 +68,7 @@ public class RoomConfiguration : IEntityTypeConfiguration<Room>
             .HasForeignKey(x => x.HotelId);
         
         builder.Property(x => x.RoomType)
-            .HasConversion<string>()
+            .HasConversion<int>()
             .IsRequired();
     }
 }
@@ -97,7 +97,7 @@ public class BookingConfiguration : IEntityTypeConfiguration<Booking>
             .IsRequired();
         
         builder.Property(x => x.Status)
-            .HasConversion<string>()
+            .HasConversion<int>()
             .IsRequired();
     }
 }

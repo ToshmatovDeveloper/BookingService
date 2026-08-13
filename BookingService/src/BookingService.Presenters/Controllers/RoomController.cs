@@ -13,7 +13,7 @@ namespace BookingService.Presenters.Controllers;
 public class RoomController(
     IMediator mediator): ControllerBase
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     [EnableRateLimiting("fixed")]
     [HttpPost]
     public async Task<IActionResult> CreateRoom(
@@ -39,7 +39,7 @@ public class RoomController(
         return Ok(room);
     }
     
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     [EnableRateLimiting("fixed")]
     [HttpDelete("{roomId:guid}")]
     public async Task<IActionResult> DeleteRoom(

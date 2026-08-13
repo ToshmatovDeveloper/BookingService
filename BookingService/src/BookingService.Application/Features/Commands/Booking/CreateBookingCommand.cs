@@ -1,6 +1,9 @@
-﻿using BookingService.Domain.DTOs;
+﻿using BookingService.Contracts.Events;
+using BookingService.Domain.DTOs;
 using BookingService.Domain.Enum;
 using BookingService.Infrastructure;
+using gRPC.Clients;
+using MassTransit; 
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -11,13 +14,18 @@ public record CreateBookingCommand(BookingDto BookingDto, Guid UserId) : IReques
 
 public class CreateBookingCommandHandler(
     ApplicationDbContext dbContext,
-    ILogger<CreateBookingCommandHandler> logger) : IRequestHandler<CreateBookingCommand, BookingDto>
+    ILogger<CreateBookingCommandHandler> logger,
+    IPublishEndpoint publishEndpoint,
+    AuthGrpcClient authGrpcClient) : IRequestHandler<CreateBookingCommand, BookingDto> 
 {
     public async Task<BookingDto> Handle(CreateBookingCommand command, CancellationToken cancellationToken)
     {
-        // ДОБАВЛЕНО: Логируем UserId для удобства отладки
         logger.LogInformation("Started creating booking for user: {UserId}", command.UserId);
         var dto = command.BookingDto;
+
+        
+        var userInfo = await authGrpcClient.GetUserByIdAsync(command.UserId);
+        var userEmail = userInfo?.Email ?? "unknown@example.com"; 
 
         var isAvailable = await CheckAvailability(dto.RoomId, dto.StartDate, dto.EndDate, cancellationToken);
         
@@ -34,42 +42,35 @@ public class CreateBookingCommandHandler(
         try
         {
             await dbContext.Bookings.AddAsync(booking, cancellationToken);
-            
-            logger.LogInformation("Booking created with id {id}", booking.Id);
-            
             await dbContext.SaveChangesAsync(cancellationToken);
+
+            await publishEndpoint.Publish<BookingCreatedIntegrationEvent>(new BookingCreatedIntegrationEvent
+            {
+                BookingId = booking.Id,
+                UserName = userInfo.Username,
+                UserEmail = userEmail, 
+            }, cancellationToken);
+
+            logger.LogInformation("Booking created with id {id} and event published", booking.Id);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex.Message);
+            logger.LogError(ex, "Error creating booking");
             throw;
         }
         
         return new BookingDto(booking.HotelId, booking.RoomId, booking.StartDate, booking.EndDate);
     }
     
-    private async Task<bool> CheckAvailability(
-        Guid roomId, 
-        DateTime startDate,
-        DateTime endDate,
-        CancellationToken cancellationToken)
+    private async Task<bool> CheckAvailability(Guid roomId, DateTime startDate, DateTime endDate, CancellationToken cancellationToken)
     {
-        logger.LogInformation($"Checking room with id : {roomId}");
-
         var room = await dbContext.Rooms
             .Include(r => r.Bookings) 
             .Where(x => x.Id == roomId)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (room == null)
-        {
-            throw new Exception($"Room with ID {roomId} was not found.");
-        }
-
-        if (room.Bookings == null)
-        {
-            return true; 
-        }
+        if (room == null) throw new Exception($"Room with ID {roomId} was not found.");
+        if (room.Bookings == null) return true; 
 
         foreach (var roomBooking in room.Bookings)
         {

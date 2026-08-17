@@ -12,6 +12,8 @@ using BookingService.Notification.Application.Features;
 using BookingService.Notification.Application.Settings;
 using BookingService.Notification.Application.Validation;
 using BookingService.Notification.Infrastructure;
+using BookingService.Notification.Infrastructure.Consumers.auth;
+using BookingService.Notification.Infrastructure.Consumers.booking;
 using BookingService.Web.Middlewares.Auth;
 using BookingService.Web.Middlewares.Exception;
 using FluentValidation;
@@ -88,6 +90,9 @@ public static class AppBuilderExtensions
         services.AddMassTransit(x =>
         {
             x.AddConsumer<BookingCreatedConsumer>();
+            x.AddConsumer<BookingCancelledConsumer>();
+            x.AddConsumer<UserLoggedInConsumer>();
+            x.AddConsumer<UserRegisteredConsumer>();
 
             x.UsingRabbitMq((context, cfg) =>
             {

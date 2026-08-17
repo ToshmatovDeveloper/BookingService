@@ -3,6 +3,8 @@ using BookingService.Auth.Application.Features.Tokens;
 using BookingService.Auth.Application.Settings;
 using BookingService.Auth.Domain.Entities;
 using BookingService.Auth.Infrastructure;
+using BookingService.Contracts.Events.auth;
+using MassTransit;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
@@ -17,7 +19,8 @@ public class UserLoginCommandHandler(
     AuthDbContext dbContext,
     UserManager<Account> userManager,
     IOptionsMonitor<JwtSettings> options,
-    TokenProvider tokenProvider) : IRequestHandler<UserLoginCommand, UserLoginResponse>
+    TokenProvider tokenProvider,
+    IPublishEndpoint publishEndpoint) : IRequestHandler<UserLoginCommand, UserLoginResponse>
 {
     public async Task<UserLoginResponse> Handle(UserLoginCommand command, CancellationToken cancellationToken)
     {
@@ -44,6 +47,12 @@ public class UserLoginCommandHandler(
         
         await dbContext.SaveChangesAsync(cancellationToken);
         
+        await publishEndpoint.Publish(new UserLoggedInIntegrationEvent
+        {
+            UserId = user.Id,
+            UserEmail = user.Email
+        }, cancellationToken);
+
         return new UserLoginResponse(accessToken, refreshToken.Token, user.Id, user.Email!);
     }
 }

@@ -5,6 +5,8 @@ using BookingService.Auth.Application.Features.Tokens;
 using BookingService.Auth.Application.Settings;
 using BookingService.Auth.Domain.Entities;
 using BookingService.Auth.Infrastructure;
+using BookingService.Contracts.Events.auth;
+using MassTransit;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -20,27 +22,29 @@ public record UserRegisterResponse(string accessToken, string refreshToken, stri
 public class UserRegisterCommandHandler(
     UserManager<Account> userManager,
     RoleManager<Role> roleManager,
-    AuthDbContext  dbContext,
+    AuthDbContext dbContext,
     IOptionsMonitor<JwtSettings> options,
     TokenProvider tokenProvider,
-    ILogger<UserRegisterCommandHandler> logger) : IRequestHandler<UserRegisterCommand, UserRegisterResponse>
+    ILogger<UserRegisterCommandHandler> logger,
+    IPublishEndpoint publishEndpoint) : IRequestHandler<UserRegisterCommand, UserRegisterResponse>
 {
     public async Task<UserRegisterResponse> Handle(
         UserRegisterCommand command,
         CancellationToken cancellationToken)
     {
         logger.LogInformation("Handling user registration request.");
-        
+
         var user = new Account(command.Email, command.UserName);
-        
-        var userNameIsNotValid = await dbContext.Accounts.AnyAsync(x => x.UserName == command.UserName, cancellationToken);
+
+        var userNameIsNotValid =
+            await dbContext.Accounts.AnyAsync(x => x.UserName == command.UserName, cancellationToken);
 
         if (userNameIsNotValid)
         {
             logger.LogWarning("Username is already in use.");
             throw new UserNameIsAlreadyInUseException("Username is already in use.");
         }
-        
+
         var emailIsNotValid = await dbContext.Accounts.AnyAsync(x => x.Email == command.Email, cancellationToken);
 
         if (emailIsNotValid)
@@ -48,22 +52,22 @@ public class UserRegisterCommandHandler(
             logger.LogWarning("Email is already in use.");
             throw new EmailIsAlreadyInUseException("Email is already in use.");
         }
-        
+
         var result = await userManager.CreateAsync(user, command.Password);
-        
+
         if (!result.Succeeded)
         {
             logger.LogError("Failed to create user.");
             throw new UserCreateFailedException("Failed to create user.");
         }
-        
+
         var role = new Role("User");
 
         if (!await roleManager.RoleExistsAsync(role.Name))
         {
             await roleManager.CreateAsync(role);
         }
-        
+
         var roleAddResult = await userManager.AddToRoleAsync(user, role.Name);
 
         if (!roleAddResult.Succeeded)
@@ -73,7 +77,7 @@ public class UserRegisterCommandHandler(
         }
 
         var roles = await userManager.GetRolesAsync(user);
-        
+
         var accessToken = tokenProvider.GenerateAccessToken(user, roles);
 
         var refreshToken = new RefreshToken
@@ -83,13 +87,20 @@ public class UserRegisterCommandHandler(
             Token = tokenProvider.GenerateRefreshToken(),
             ExpiresOnUtc = DateTime.UtcNow.AddDays(options.CurrentValue.RefreshTokenExpirationInDays)
         };
-        
+
         await dbContext.RefreshTokens.AddAsync(refreshToken, cancellationToken);
-        
+
         await dbContext.SaveChangesAsync(cancellationToken);
-        
+
+        await publishEndpoint.Publish(new UserRegisteredIntegrationEvent
+        {
+            UserId = user.Id,
+            UserName = user.UserName,
+            UserEmail = user.Email
+        }, cancellationToken);
+
         logger.LogInformation("User successfully registered.");
-        
+
         return new UserRegisterResponse(accessToken, refreshToken.Token, "Welcome to Booking Service");
     }
 }

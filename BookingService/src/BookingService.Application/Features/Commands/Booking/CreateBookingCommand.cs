@@ -5,6 +5,7 @@ using BookingService.Infrastructure;
 using gRPC.Clients;
 using MassTransit; 
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -22,7 +23,6 @@ public class CreateBookingCommandHandler(
     {
         logger.LogInformation("Started creating booking for user: {UserId}", command.UserId);
         var dto = command.BookingDto;
-
         
         var userInfo = await authGrpcClient.GetUserByIdAsync(command.UserId);
         var userEmail = userInfo?.Email ?? "unknown@example.com"; 
@@ -31,7 +31,7 @@ public class CreateBookingCommandHandler(
         
         if (!isAvailable)
         {
-            throw new Exception("Room is not available for booking in current time range");
+            throw new BadHttpRequestException("Room is not available for booking in current time range");
         }
         
         BookingStatus status = BookingStatus.Confirmed;
@@ -39,25 +39,17 @@ public class CreateBookingCommandHandler(
         var booking = new Domain.Entities.Booking(
             dto.HotelId, dto.RoomId, command.UserId, dto.StartDate, dto.EndDate, status);
         
-        try
-        {
-            await dbContext.Bookings.AddAsync(booking, cancellationToken);
-            await dbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.Bookings.AddAsync(booking, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
 
-            await publishEndpoint.Publish<BookingCreatedIntegrationEvent>(new BookingCreatedIntegrationEvent
-            {
-                BookingId = booking.Id,
-                UserName = userInfo.Username,
-                UserEmail = userEmail, 
-            }, cancellationToken);
-
-            logger.LogInformation("Booking created with id {id} and event published", booking.Id);
-        }
-        catch (Exception ex)
+        await publishEndpoint.Publish<BookingCancelledIntegrationEvent>(new BookingCancelledIntegrationEvent
         {
-            logger.LogError(ex, "Error creating booking");
-            throw;
-        }
+            BookingId = booking.Id,
+            UserName = userInfo.Username,
+            UserEmail = userEmail, 
+        }, cancellationToken);
+
+        logger.LogInformation("Booking created with id {id} and event published", booking.Id);
         
         return new BookingDto(booking.HotelId, booking.RoomId, booking.StartDate, booking.EndDate);
     }
@@ -69,7 +61,9 @@ public class CreateBookingCommandHandler(
             .Where(x => x.Id == roomId)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (room == null) throw new Exception($"Room with ID {roomId} was not found.");
+        if (room == null) 
+            throw new BadHttpRequestException($"Room with ID {roomId} was not found.");
+            
         if (room.Bookings == null) return true; 
 
         foreach (var roomBooking in room.Bookings)

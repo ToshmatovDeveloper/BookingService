@@ -4,7 +4,7 @@ using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
-namespace BookingService.Notification.Infrastructure;
+namespace BookingService.Notification.Infrastructure.Consumers.booking;
 
 public class BookingCreatedConsumer(
     IMediator mediator, 

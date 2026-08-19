@@ -33,6 +33,7 @@ builder.Services.AddCustomRateLimiter();
 builder.Services.AddCustomMediatR();
 builder.Services.AddMyCustomMiddlewares();
 builder.Services.AddAuthGrpcClient(authServiceUrl);
+builder.Services.AddMyOpenTelemetry();
 
 builder.Services.AddIdentity<Account, Role>()
     .AddEntityFrameworkStores<AuthDbContext>();

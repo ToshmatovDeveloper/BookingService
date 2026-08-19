@@ -23,6 +23,9 @@ using MassTransit;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 
 namespace BookingService.Web.Extensions;
 
@@ -205,6 +208,31 @@ public static class AppBuilderExtensions
             cfg.AddOpenBehavior(typeof(Application.Validation.ValidationBehavior<,>));
         });
 
+        return services;
+    }
+    
+    public static IServiceCollection AddMyOpenTelemetry(this IServiceCollection services)
+    {
+        services.AddOpenTelemetry()
+            .ConfigureResource(resource => resource.AddService("BookingService"))
+            .WithMetrics(metrics =>
+            {
+                metrics
+                    .AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation();
+
+                metrics.AddOtlpExporter(options => options.Endpoint = new Uri("http://localhost:4317"));
+            })
+            .WithTracing(tracing =>
+            {
+                tracing
+                    .AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation()
+                    .AddEntityFrameworkCoreInstrumentation();
+
+                tracing.AddOtlpExporter(options => options.Endpoint = new Uri("http://localhost:4317"));
+            });
+        
         return services;
     }
 }

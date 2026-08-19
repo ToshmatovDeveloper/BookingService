@@ -1,4 +1,19 @@
+version: '3.8'
+
 services:
+  aspire-dashboard:
+    image: mcr.microsoft.com/dotnet/nightly/aspire-dashboard:latest
+    container_name: aspire_dashboard
+    restart: always
+    ports:
+      - "18888:18888"
+      - "4317:4317"
+      - "4318:4318"
+    environment:
+      - DOTNET_DASHBOARD_UNAUTHENTICATED_ENDPOINT=true
+    networks:
+      - booking-network
+
   gateway-api:
     container_name: gateway_api
     image: bookingservice-gateway-api
@@ -13,15 +28,19 @@ services:
       - ASPNETCORE_URLS=http://+:5000
       - ConnectionStrings__Redis=redis:6379
       - ConnectionStrings__DefaultConnection=Host=booking_postgres;Port=5432;Database=booking_service_db;Username=postgres;Password=postgres
-      - ConnectionStrings__AuthConnection=Host=auth_postgres;Port=5432;Database=auth_db;Username=postgres;Password=postgres
+      - ConnectionStrings__AuthServiceConnection=Host=auth_postgres;Port=5432;Database=auth_db;Username=postgres;Password=postgres
       - ConnectionStrings__NotificationConnection=Host=notification_postgres;Port=5432;Database=notification_db;Username=postgres;Password=postgres
       - SmtpSettings__Host=mailpit
+      - RabbitMQ__Host=rabbitmq
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://aspire-dashboard:4317
     depends_on:
       - booking-postgres
       - auth_postgres
       - notification-postgres
       - mailpit
       - redis
+      - rabbitmq
+      - aspire-dashboard
     networks:
       - booking-network
 
@@ -88,6 +107,16 @@ services:
       - "6379:6379"
     volumes:
       - redis-data:/data
+    networks:
+      - booking-network
+
+  rabbitmq:
+    container_name: rabbitmq_broker
+    image: rabbitmq:3-management-alpine
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
     networks:
       - booking-network
 

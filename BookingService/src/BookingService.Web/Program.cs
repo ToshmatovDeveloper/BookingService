@@ -1,8 +1,13 @@
+using System.Text.Json;
 using BookingService.Auth.Domain.Entities;
 using BookingService.Auth.Infrastructure;
 using BookingService.Auth.Application.Features.Tokens;
 using BookingService.Auth.Application.BackgroundServices;
+using BookingService.Infrastructure.Health;
 using BookingService.Web.Extensions;
+using HealthChecks.UI.Client;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,6 +21,8 @@ builder.Services.AddControllers();
 builder.Services.AddCustomOpenApi();
 builder.Services.AddMagicOnion();
 builder.Services.AddProblemDetails();
+
+builder.Services.AddCustomHealthChecks(builder.Configuration);
 
 builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
@@ -48,10 +55,14 @@ var app = builder.Build();
 
 app.UseExceptionHandler();
 app.UseHttpsRedirection();
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+});
 app.UseSerilogRequestLogging();
 app.MapReverseProxy();
 
-app.AddMyCustomAuth(); 
+app.AddMyCustomAuth();
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -63,7 +74,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "BookingService API v1");
-        c.RoutePrefix = "swagger"; 
+        c.RoutePrefix = "swagger";
     });
 }
 

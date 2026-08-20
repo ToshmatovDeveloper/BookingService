@@ -23,6 +23,7 @@ using MassTransit;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -76,6 +77,8 @@ public static class AppBuilderExtensions
         var authServiceConnectionString = configuration.GetConnectionString("AuthServiceConnection");
         var notificationConnectionString = configuration.GetConnectionString("NotificationConnection");
 
+        services.AddSingleton<Infrastructure.Connection.DbConnectionFactory>();
+
         services.AddSingleton<UpdateAuditableEntitiesInterceptor>();
 
         services.AddDbContext<ApplicationDbContext>((sp, options) =>
@@ -90,6 +93,44 @@ public static class AppBuilderExtensions
         return services;
     }
 
+    public static IServiceCollection AddCustomHealthChecks(this IServiceCollection services, IConfiguration configuration)
+    {
+        var rabbitHost = configuration["RabbitMQ:Host"] ?? "localhost";
+        var rabbitUser = configuration["RabbitMQ:Username"] ?? "guest";
+        var rabbitPass = configuration["RabbitMQ:Password"] ?? "guest";
+            
+        services.AddHealthChecks()
+            .AddNpgSql(
+                configuration.GetConnectionString("DefaultConnection")!, 
+                name: "booking-postgres", 
+                failureStatus: HealthStatus.Unhealthy)
+            .AddNpgSql(
+                configuration.GetConnectionString("AuthServiceConnection")!, 
+                name: "auth-postgres", 
+                failureStatus: HealthStatus.Unhealthy)
+            .AddNpgSql(
+                configuration.GetConnectionString("NotificationConnection")!, 
+                name: "notification-postgres", 
+                failureStatus: HealthStatus.Unhealthy)
+            .AddRedis(
+                configuration.GetConnectionString("Redis")!, 
+                name: "redis-cache", 
+                failureStatus: HealthStatus.Degraded)
+            .AddRabbitMQ(
+                sp => 
+                {
+                var factory = new RabbitMQ.Client.ConnectionFactory()
+                {
+                    Uri = new Uri($"amqp://{rabbitUser}:{rabbitPass}@{rabbitHost}:5672/")
+                };
+                    return factory.CreateConnectionAsync().GetAwaiter().GetResult();
+                },
+                name: "rabbitmq",
+                failureStatus: HealthStatus.Unhealthy);
+    
+        return services;
+    }
+        
     public static IServiceCollection AddCustomMassTransit(this IServiceCollection services,
         IConfiguration configuration)
     {
@@ -242,7 +283,7 @@ public static class AppBuilderExtensions
             {
                 logging.AddOtlpExporter(options => options.Endpoint = new Uri("http://localhost:4317"));
             });
-        
+
         return services;
     }
 }

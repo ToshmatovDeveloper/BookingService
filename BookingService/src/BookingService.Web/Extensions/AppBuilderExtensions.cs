@@ -23,6 +23,7 @@ using MassTransit;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -39,11 +40,12 @@ public static class AppBuilderExtensions
         services.AddExceptionHandler<FailedAddUserRoleExceptionHandler>();
         services.AddExceptionHandler<UserCreateFailedExceptionHandler>();
         services.AddExceptionHandler<GlobalExceptionHandler>();
-        
+
         return services;
     }
-    
-    public static IServiceCollection AddMyCustomConfiguration(this IServiceCollection services, IConfiguration configuration)
+
+    public static IServiceCollection AddMyCustomConfiguration(this IServiceCollection services,
+        IConfiguration configuration)
     {
         services.Configure<PasswordSettings>(configuration.GetSection("PasswordSettings"));
         services.Configure<LockoutSettings>(configuration.GetSection("LockoutSettings"));
@@ -54,12 +56,12 @@ public static class AppBuilderExtensions
 
         return services;
     }
-    
+
     public static IApplicationBuilder AddMyCustomAuth(this IApplicationBuilder app)
     {
         return app.UseMiddleware<CustomAuthMiddleware>();
     }
-    
+
     public static IServiceCollection AddAuthGrpcClient(this IServiceCollection services, string serverUrl)
     {
         services.AddSingleton(GrpcChannel.ForAddress(serverUrl, new GrpcChannelOptions()));
@@ -88,7 +90,8 @@ public static class AppBuilderExtensions
         return services;
     }
 
-    public static IServiceCollection AddCustomMassTransit(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddCustomMassTransit(this IServiceCollection services,
+        IConfiguration configuration)
     {
         services.AddMassTransit(x =>
         {
@@ -119,7 +122,7 @@ public static class AppBuilderExtensions
         services.AddValidatorsFromAssemblies([
             typeof(CreateHotelRequestValidator).Assembly,
             typeof(PasswordValidator).Assembly,
-            typeof(SendMailCommandValidator).Assembly 
+            typeof(SendMailCommandValidator).Assembly
         ]);
 
         return services;
@@ -135,14 +138,15 @@ public static class AppBuilderExtensions
             {
                 context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
 
-                double retrySeconds = 60; 
+                double retrySeconds = 60;
                 if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
                 {
                     retrySeconds = retryAfter.TotalSeconds;
                     context.HttpContext.Response.Headers.RetryAfter = retrySeconds.ToString();
                 }
 
-                var problemDetailsFactory = context.HttpContext.RequestServices.GetRequiredService<ProblemDetailsFactory>();
+                var problemDetailsFactory =
+                    context.HttpContext.RequestServices.GetRequiredService<ProblemDetailsFactory>();
                 var problemDetails = problemDetailsFactory.CreateProblemDetails(
                     context.HttpContext,
                     statusCode: StatusCodes.Status429TooManyRequests,
@@ -151,9 +155,10 @@ public static class AppBuilderExtensions
                 );
 
                 context.HttpContext.Response.ContentType = "application/json";
-                await context.HttpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken: cancellationToken);
+                await context.HttpContext.Response.WriteAsJsonAsync(problemDetails,
+                    cancellationToken: cancellationToken);
             };
-            
+
             options.AddFixedWindowLimiter("fixed", cfg =>
             {
                 cfg.PermitLimit = 5;
@@ -173,7 +178,7 @@ public static class AppBuilderExtensions
                         ReplenishmentPeriod = TimeSpan.FromMinutes(1),
                     });
                 }
-                
+
                 return RateLimitPartition.GetFixedWindowLimiter("anonymous", _ => new FixedWindowRateLimiterOptions
                 {
                     PermitLimit = 5,
@@ -210,7 +215,7 @@ public static class AppBuilderExtensions
 
         return services;
     }
-    
+
     public static IServiceCollection AddMyOpenTelemetry(this IServiceCollection services)
     {
         services.AddOpenTelemetry()
@@ -228,9 +233,14 @@ public static class AppBuilderExtensions
                 tracing
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
-                    .AddEntityFrameworkCoreInstrumentation();
+                    .AddEntityFrameworkCoreInstrumentation()
+                    .AddGrpcClientInstrumentation();
 
                 tracing.AddOtlpExporter(options => options.Endpoint = new Uri("http://localhost:4317"));
+            })
+            .WithLogging(logging =>
+            {
+                logging.AddOtlpExporter(options => options.Endpoint = new Uri("http://localhost:4317"));
             });
         
         return services;
